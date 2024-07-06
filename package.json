@@ -1,7 +1,12 @@
 {
   "name": "nuxt-app",
+  "devDependencies": {
+    "@nuxt/devtools": "latest",
+    "@nuxt/image": "latest",
+    "@nuxt/ui": "^2.17.0",
+    "nuxt": "^3.12.3"
+  },
   "private": true,
-  "type": "module",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -9,13 +14,5 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
-  "devDependencies": {
-    "@nuxt/devtools": "latest",
-    "@nuxt/image": "latest",
-    "@nuxt/ui": "^2.17.0",
-    "nuxt": "^3.12.3"
-  },
-  "dependencies": {
-    "@iconify-json/ph": "^1.1.13"
-  }
+  "type": "module"
 }

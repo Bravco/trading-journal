@@ -7,7 +7,7 @@
                         <div class="h-4 md:h-6 flex items-center gap-2">
                             <span class="text-sm">Net P&L</span>
                             <UTooltip text="Total of all profits and losses">
-                                <UIcon name="i-ph-info-duotone"/>
+                                <UIcon name="i-heroicons-information-circle"/>
                             </UTooltip>
                         </div>
                     </template>
@@ -23,7 +23,7 @@
                             <div class="flex items-center gap-2">
                                 <span class="text-sm">Win Rate</span>
                                 <UTooltip text="Percentage of winning trades">
-                                    <UIcon name="i-ph-info-duotone"/>
+                                    <UIcon name="i-heroicons-information-circle"/>
                                 </UTooltip>
                             </div>
                             <UTooltip text="Total number of trades">
@@ -56,7 +56,7 @@
                         <div class="h-4 md:h-6 flex items-center gap-2">
                             <span class="text-sm">Profit Factor</span>
                             <UTooltip text="Ratio of the total gross profit to the total gross loss">
-                                <UIcon name="i-ph-info-duotone"/>
+                                <UIcon name="i-heroicons-information-circle"/>
                             </UTooltip>
                         </div>
                     </template>
@@ -67,7 +67,7 @@
                         <UBadge v-else-if="profitFactor <= 2" label="Average" variant="subtle" size="lg" color="orange"/>
                         <UBadge v-else-if="profitFactor <= 3" label="Good" variant="subtle" size="lg" color="green"/>
                         <UBadge v-else-if="profitFactor <= 4" label="Great" variant="subtle" size="lg" color="green"/>
-                        <UBadge v-else-if="profitFactor <= 5" label="Excellent" variant="subtle" size="lg" color="green"/>
+                        <UBadge v-else label="Excellent" variant="subtle" size="lg" color="green"/>
                     </div>
                 </UCard>
                 <UCard>
@@ -75,7 +75,7 @@
                         <div class="h-4 md:h-6 flex items-center gap-2">
                             <span class="text-sm">Real Risk Reward</span>
                             <UTooltip text="Average win to loss ratio per trade">
-                                <UIcon name="i-ph-info-duotone"/>
+                                <UIcon name="i-heroicons-information-circle"/>
                             </UTooltip>
                         </div>
                     </template>
@@ -92,7 +92,7 @@
                 </UCard>
             </div>
             <UCard>
-                <UTable :sort="sort" :columns="columns" :rows="rows" :empty-state="{ icon: 'i-ph-stack-simple-duotone', label: 'No trades' }">
+                <UTable :sort="sort" :columns="columns" :rows="rows" :empty-state="{ icon: 'i-heroicons-circle-stack', label: 'No trades' }">
                     <template #open-data="{ row }">
                         <span>{{ `${row.open.toDateString()} ${row.open.toLocaleTimeString([], { timeStyle: "short" })}` }}</span>
                     </template>
@@ -110,7 +110,7 @@
                     <template #status-data="{ row }">
                         <UBadge v-if="row.pnl > 0" label="Win" variant="subtle" color="green"/>
                         <UBadge v-if="row.pnl < 0" label="Lose" variant="subtle" color="red"/>
-                        <UBadge v-if="row.pnl == 0" label="Breakeven" variant="subtle" color="blue"/>
+                        <UBadge v-if="row.pnl === 0" label="Breakeven" variant="subtle" color="blue"/>
                     </template>
                     <template #imageUrl-data="{ row }">
                         <ULink :to="row.imageUrl" target="_blank">
@@ -119,7 +119,7 @@
                     </template>
                     <template #actions-data="{ row }">
                         <UDropdown :items="tradeActions(row)">
-                            <UButton color="gray" variant="ghost" icon="i-ph-dots-three-duotone" square/>
+                            <UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal" square/>
                         </UDropdown>
                     </template>
                 </UTable>
@@ -143,7 +143,7 @@ const columns = [
     { key: "actions" },
 ];
 
-const trades: Trade[] = [
+const trades = ref<Trade[]>([
     {
         open: new Date("2024-07-05T15:35:00"),
         symbol: "NQ",
@@ -208,26 +208,26 @@ const trades: Trade[] = [
         rr: 1.94,
         imageUrl: "https://www.tradingview.com/x/IqNKyxNQ/",
     },
-];
+]);
 
 const tradeActions = (trade: Trade) => [
     [
         {
             label: "Edit",
-            icon: "i-ph-note-pencil-duotone",
+            icon: "i-heroicons-pencil-square",
             click: () => console.log("Edit", trade),
         },
         {
             label: "Duplicate",
-            icon: "i-ph-copy-duotone",
+            icon: "i-heroicons-document-duplicate",
             click: () => console.log("Duplicate", trade),
         },
     ],
     [
         {
             label: "Delete",
-            icon: "i-ph-trash-duotone",
-            click: () => console.log("Delete", trade),
+            icon: "i-heroicons-trash",
+            click: () => trades.value = trades.value.filter(t => t !== trade),
         },
     ],
 ];
@@ -240,21 +240,28 @@ const sort = ref({
     direction: "desc",
 });
 
-const rows = computed<Trade[]>(() => trades.slice((page.value - 1) * tradesPerPage, page.value * tradesPerPage));
+const rows = computed<Trade[]>(() => trades.value.slice((page.value - 1) * tradesPerPage, page.value * tradesPerPage));
 
-const winTrades = computed<Trade[]>(() => trades.filter(trade => trade.pnl > 0));
-const loseTrades = computed<Trade[]>(() => trades.filter(trade => trade.pnl < 0));
-const breakevenTrades = computed<Trade[]>(() => trades.filter(trade => trade.pnl == 0));
+const winTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl > 0));
+const loseTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl < 0));
+const breakevenTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl === 0));
 
 const grossProfit = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0));
 const grossLoss = computed<number>(() => loseTrades.value.reduce((acc, trade) => acc + Math.abs(trade.pnl), 0));
 
-const totalPnl = computed<number>(() => trades.reduce((acc, trade) => acc + trade.pnl, 0));
-const winRate = computed<number>(() => (winTrades.value.length / trades.length) * 100);
-const breakevenRate = computed<number>(() => (breakevenTrades.value.length / trades.length) * 100);
+const totalPnl = computed<number>(() => trades.value.reduce((acc, trade) => acc + trade.pnl, 0));
+const winRate = computed<number>(() => (winTrades.value.length / trades.value.length) * 100);
+const breakevenRate = computed<number>(() => (breakevenTrades.value.length / trades.value.length) * 100);
 const profitFactor = computed<number>(() => grossProfit.value / grossLoss.value);
 
 const avgWin = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / winTrades.value.length);
-const avgLose = computed<number>(() => loseTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / loseTrades.value.length);
+const avgLose = computed<number>(() => {
+    const value = loseTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / loseTrades.value.length;
+    if (value) {
+        return value;
+    } else {
+        return 0;
+    }
+});
 const realRr = computed<number>(() => Math.abs(avgWin.value / avgLose.value));
 </script>

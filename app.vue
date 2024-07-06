@@ -4,7 +4,7 @@
             <div class="flex justify-between items-center">
                 <h1 class="text-xl font-bold">Trading <span class="text-primary">Journal</span></h1>
                 <UDropdown :items="addActions">
-                    <UButton icon="i-ph-plus-duotone" variant="solid" size="lg" :ui="{ rounded: 'rounded-full' }"/>
+                    <UButton icon="i-heroicons-plus" variant="solid" size="lg" :ui="{ rounded: 'rounded-full' }"/>
                 </UDropdown>
             </div>
 
@@ -18,7 +18,7 @@
     </main>
 
     <footer>
-        <UContainer class="max-w-full py-4 mt-4 sm:mt-10 bg-background/75 backdrop-blur border-t border-gray-200 dark:border-gray-800 flex justify-center items-center text-sm">
+        <UContainer class="max-w-full py-4 lg:py-6 mt-4 sm:mt-10 bg-background/75 backdrop-blur border-t border-gray-200 dark:border-gray-800 flex justify-center items-center text-sm">
             <span>
                 Copyright &copy; {{ new Date().getFullYear() }} | Created by
                 <ULink 
@@ -35,12 +35,12 @@
     const addActions = [[
         {
             label: "New Strategy",
-            icon: "i-ph-chart-line-up-duotone",
+            icon: "i-heroicons-presentation-chart-line",
             click: () => console.log("New Strategy"),
         },
         {
             label: "New Trade",
-            icon: "i-ph-pencil-duotone",
+            icon: "i-heroicons-document-plus",
             click: () => console.log("New Trade"),
         },
     ]];
