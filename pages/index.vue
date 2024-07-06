@@ -12,7 +12,7 @@
                                 </UTooltip>
                             </div>
                             <UTooltip text="Total number of trades">
-                                <UBadge variant="soft">{{ trades.length }}</UBadge>
+                                <UBadge variant="subtle">{{ trades.length }}</UBadge>
                             </UTooltip>
                         </div>
                     </template>
@@ -37,14 +37,14 @@
                             <RadialProgress :progress-primary="winRate" :progress-secondary="breakevenRate"/>
                             <div class="flex flex-col justify-center items-center gap-2">
                                 <UTooltip text="Total number of win trades">
-                                    <UBadge variant="soft" color="green">{{ winTrades.length }}</UBadge>
+                                    <UBadge variant="subtle" color="green">{{ winTrades.length }}</UBadge>
                                 </UTooltip>
                                 <div class="flex flex-row md:flex-col justify-center items-center gap-2">
                                     <UTooltip text="Total number of breakeven trades">
-                                        <UBadge variant="soft" color="blue">{{ breakevenTrades.length }}</UBadge>
+                                        <UBadge variant="subtle" color="blue">{{ breakevenTrades.length }}</UBadge>
                                     </UTooltip>
                                     <UTooltip text="Total number of lose trades">
-                                        <UBadge variant="soft" color="red">{{ loseTrades.length }}</UBadge>
+                                        <UBadge variant="subtle" color="red">{{ loseTrades.length }}</UBadge>
                                     </UTooltip>
                                 </div>
                             </div>
@@ -62,7 +62,12 @@
                     </template>
                     <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
                         <span class="text-2xl font-bold">{{ profitFactor.toFixed(2) }}</span>
-                        <HalfRadialProgress :progress="50"/>
+                        <UBadge v-if="profitFactor <= 1" variant="subtle" size="lg" color="red">Bad</UBadge>
+                        <UBadge v-else-if="profitFactor <= 1.5" variant="subtle" size="lg" color="red">Poor</UBadge>
+                        <UBadge v-else-if="profitFactor <= 2" variant="subtle" size="lg" color="orange">Average</UBadge>
+                        <UBadge v-else-if="profitFactor <= 3" variant="subtle" size="lg" color="green">Good</UBadge>
+                        <UBadge v-else-if="profitFactor <= 4" variant="subtle" size="lg" color="green">Great</UBadge>
+                        <UBadge v-else-if="profitFactor <= 5" variant="subtle" size="lg" color="green">Excellent</UBadge>
                     </div>
                 </UCard>
                 <UCard>
@@ -100,9 +105,9 @@
                         <span>{{ row.rr.toFixed(2) }}</span>
                     </template>
                     <template #result-data="{ row }">
-                        <UBadge v-if="row.pnl > 0" variant="soft" color="green">Win</UBadge>
-                        <UBadge v-if="row.pnl < 0" variant="soft" color="red">Lose</UBadge>
-                        <UBadge v-if="row.pnl == 0" variant="soft" color="blue">Breakeven</UBadge>
+                        <UBadge v-if="row.pnl > 0" variant="subtle" color="green">Win</UBadge>
+                        <UBadge v-if="row.pnl < 0" variant="subtle" color="red">Lose</UBadge>
+                        <UBadge v-if="row.pnl == 0" variant="subtle" color="blue">Breakeven</UBadge>
                     </template>
                     <template #imageUrl-data="{ row }">
                         <ULink :to="row.imageUrl" class="flex items-center gap-1 hover:text-primary" target="_blank">
