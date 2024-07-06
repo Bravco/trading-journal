@@ -3,7 +3,10 @@
         <UContainer class="max-w-full py-4 lg:py-6 mb-0 sm:mb-4 bg-background/75 backdrop-blur border-b sticky top-0 z-50 border-primary-200 dark:border-primary-800">
             <div class="flex justify-between items-center">
                 <h1 class="text-xl font-bold">Trading <span class="text-primary">Journal</span></h1>
-                <UButton label="New Trade" icon="i-ph-plus-duotone"/>
+                <div class="flex items-center gap-4">
+                    <UButton @click="" label="New Strategy" icon="i-ph-chart-line-up-duotone" variant="soft"/>
+                    <UButton @click="" label="New Trade" icon="i-ph-plus-duotone"  variant="solid"/>
+                </div>
             </div>
         </UContainer>
     </header>
@@ -14,7 +17,17 @@
         </NuxtLayout>
     </main>
 
-    <footer></footer>
+    <footer>
+        <UContainer class="max-w-full py-4 mt-4 sm:mt-10 bg-background/75 backdrop-blur border-t border-primary-200 dark:border-primary-800 flex justify-center items-center text-sm">
+            <span>Copyright &copy; {{ new Date().getFullYear() }} | Created by</span>
+            <UButton 
+                to="https://hamracek.dev" 
+                label="Andrej Hamráček" 
+                variant="link"
+                target="_blank"
+            />
+        </UContainer>
+    </footer>
 </template>
 
 <style>
