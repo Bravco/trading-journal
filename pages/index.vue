@@ -33,7 +33,22 @@
                     </template>
                     <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
                         <span class="text-2xl font-bold">{{ `${winRate.toFixed(2)}%` }}</span>
-                        <RadialProgress :progress="winRate"/>
+                        <div class="flex gap-4">
+                            <RadialProgress :progress-primary="winRate" :progress-secondary="breakevenRate"/>
+                            <div class="flex flex-col justify-center items-center gap-2">
+                                <UTooltip text="Total number of win trades">
+                                    <UBadge variant="soft" color="green">{{ winTrades.length }}</UBadge>
+                                </UTooltip>
+                                <div class="flex flex-row md:flex-col justify-center items-center gap-2">
+                                    <UTooltip text="Total number of breakeven trades">
+                                        <UBadge variant="soft" color="blue">{{ breakevenTrades.length }}</UBadge>
+                                    </UTooltip>
+                                    <UTooltip text="Total number of lose trades">
+                                        <UBadge variant="soft" color="red">{{ loseTrades.length }}</UBadge>
+                                    </UTooltip>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </UCard>
                 <UCard>
@@ -47,6 +62,7 @@
                     </template>
                     <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
                         <span class="text-2xl font-bold">{{ profitFactor.toFixed(2) }}</span>
+                        <HalfRadialProgress :progress="50"/>
                     </div>
                 </UCard>
                 <UCard>
@@ -185,14 +201,16 @@ const rows = computed(() => trades.slice((page.value - 1) * tradesPerPage, page.
 
 const winTrades = computed(() => trades.filter(trade => trade.pnl > 0));
 const loseTrades = computed(() => trades.filter(trade => trade.pnl < 0));
+const breakevenTrades = computed(() => trades.filter(trade => trade.pnl == 0));
 
 const grossProfit = computed(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0));
 const grossLoss = computed(() => loseTrades.value.reduce((acc, trade) => acc + Math.abs(trade.pnl), 0));
 
 const totalPnl = computed(() => trades.reduce((acc, trade) => acc + trade.pnl, 0));
 const winRate = computed(() => (winTrades.value.length / trades.length) * 100);
+const breakevenRate = computed(() => (breakevenTrades.value.length / trades.length) * 100);
 const profitFactor = computed(() => grossProfit.value / grossLoss.value);
-//const avgRr = computed(() => trades.reduce((acc, trade) => acc + trade.rr, 0) / trades.length);
+
 const avgWin = computed(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / winTrades.value.length);
 const avgLose = computed(() => loseTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / loseTrades.value.length);
 const realRr = computed(() => Math.abs(avgWin.value / avgLose.value));
