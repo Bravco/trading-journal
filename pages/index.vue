@@ -220,7 +220,7 @@ const tradeActions = (trade: Trade) => [
         {
             label: "Duplicate",
             icon: "i-heroicons-document-duplicate",
-            click: () => console.log("Duplicate", trade),
+            click: () => trades.value.push(trade),
         },
     ],
     [
