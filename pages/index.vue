@@ -4,15 +4,10 @@
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <UCard>
                     <template #header>
-                        <div class="h-4 md:h-6 flex justify-between items-center">
-                            <div class="flex items-center gap-2">
-                                <span class="text-sm">Net P&L</span>
-                                <UTooltip text="Total of all profits and losses">
-                                    <UIcon name="i-ph-info-duotone"/>
-                                </UTooltip>
-                            </div>
-                            <UTooltip text="Total number of trades">
-                                <UBadge :label="trades.length" variant="subtle"/>
+                        <div class="h-4 md:h-6 flex items-center gap-2">
+                            <span class="text-sm">Net P&L</span>
+                            <UTooltip text="Total of all profits and losses">
+                                <UIcon name="i-ph-info-duotone"/>
                             </UTooltip>
                         </div>
                     </template>
@@ -24,10 +19,15 @@
                 </UCard>
                 <UCard>
                     <template #header>
-                        <div class="h-4 md:h-6 flex items-center gap-2">
-                            <span class="text-sm">Win Rate</span>
-                            <UTooltip text="Percentage of winning trades">
-                                <UIcon name="i-ph-info-duotone"/>
+                        <div class="h-4 md:h-6 flex justify-between items-center">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm">Win Rate</span>
+                                <UTooltip text="Percentage of winning trades">
+                                    <UIcon name="i-ph-info-duotone"/>
+                                </UTooltip>
+                            </div>
+                            <UTooltip text="Total number of trades">
+                                <UBadge :label="trades.length" variant="solid" color="gray"/>
                             </UTooltip>
                         </div>
                     </template>
@@ -113,23 +113,17 @@
                         <UBadge v-if="row.pnl == 0" label="Breakeven" variant="subtle" color="blue"/>
                     </template>
                     <template #imageUrl-data="{ row }">
-                        <UButton 
-                            :to="row.imageUrl" 
-                            icon="i-ph-link-simple-duotone" 
-                            label="Open Link" 
-                            variant="link"
-                            color="gray"
-                            class="flex items-center gap-1 hover:text-primary" 
-                            target="_blank"
-                        />
+                        <ULink :to="row.imageUrl" target="_blank">
+                            <NuxtImg :src="row.imageUrl" class="h-8 rounded cursor-pointer hover:opacity-50 transition"/>
+                        </ULink>
                     </template>
                     <template #actions-data="{ row }">
-                        <UDropdown :items="actions(row)">
+                        <UDropdown :items="tradeActions(row)">
                             <UButton color="gray" variant="ghost" icon="i-ph-dots-three-duotone" square/>
                         </UDropdown>
                     </template>
                 </UTable>
-                <div class="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex justify-center sm:justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
                     <UPagination v-model="page" :page-count="tradesPerPage" :total="trades.length" :max="3"/>
                 </div>
             </UCard>
@@ -145,11 +139,11 @@ const columns = [
     { key: "rr", label: "Risk Reward", sortable: true },
     { key: "pnl", label: "Net P&L", sortable: true },
     { key: "status", label: "Status" },
-    { key: "imageUrl", label: "Image Url" },
+    { key: "imageUrl", label: "Image" },
     { key: "actions" },
 ];
 
-const trades = [
+const trades: Trade[] = [
     {
         open: new Date("2024-07-05T15:35:00"),
         symbol: "NQ",
@@ -216,51 +210,51 @@ const trades = [
     },
 ];
 
-const actions = (row : any) => [
+const tradeActions = (trade: Trade) => [
     [
         {
             label: "Edit",
             icon: "i-ph-note-pencil-duotone",
-            click: () => console.log("Edit", row),
+            click: () => console.log("Edit", trade),
         },
         {
             label: "Duplicate",
             icon: "i-ph-copy-duotone",
-            click: () => console.log("Duplicate", row),
+            click: () => console.log("Duplicate", trade),
         },
     ],
     [
         {
             label: "Delete",
             icon: "i-ph-trash-duotone",
-            click: () => console.log("Delete", row),
+            click: () => console.log("Delete", trade),
         },
     ],
 ];
 
-const tradesPerPage = 5;
-const page = ref(1);
+const tradesPerPage: number = 10;
+const page = ref<number>(1);
 
 const sort = ref({
     column: "open",
     direction: "desc",
 });
 
-const rows = computed(() => trades.slice((page.value - 1) * tradesPerPage, page.value * tradesPerPage));
+const rows = computed<Trade[]>(() => trades.slice((page.value - 1) * tradesPerPage, page.value * tradesPerPage));
 
-const winTrades = computed(() => trades.filter(trade => trade.pnl > 0));
-const loseTrades = computed(() => trades.filter(trade => trade.pnl < 0));
-const breakevenTrades = computed(() => trades.filter(trade => trade.pnl == 0));
+const winTrades = computed<Trade[]>(() => trades.filter(trade => trade.pnl > 0));
+const loseTrades = computed<Trade[]>(() => trades.filter(trade => trade.pnl < 0));
+const breakevenTrades = computed<Trade[]>(() => trades.filter(trade => trade.pnl == 0));
 
-const grossProfit = computed(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0));
-const grossLoss = computed(() => loseTrades.value.reduce((acc, trade) => acc + Math.abs(trade.pnl), 0));
+const grossProfit = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0));
+const grossLoss = computed<number>(() => loseTrades.value.reduce((acc, trade) => acc + Math.abs(trade.pnl), 0));
 
-const totalPnl = computed(() => trades.reduce((acc, trade) => acc + trade.pnl, 0));
-const winRate = computed(() => (winTrades.value.length / trades.length) * 100);
-const breakevenRate = computed(() => (breakevenTrades.value.length / trades.length) * 100);
-const profitFactor = computed(() => grossProfit.value / grossLoss.value);
+const totalPnl = computed<number>(() => trades.reduce((acc, trade) => acc + trade.pnl, 0));
+const winRate = computed<number>(() => (winTrades.value.length / trades.length) * 100);
+const breakevenRate = computed<number>(() => (breakevenTrades.value.length / trades.length) * 100);
+const profitFactor = computed<number>(() => grossProfit.value / grossLoss.value);
 
-const avgWin = computed(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / winTrades.value.length);
-const avgLose = computed(() => loseTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / loseTrades.value.length);
-const realRr = computed(() => Math.abs(avgWin.value / avgLose.value));
+const avgWin = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / winTrades.value.length);
+const avgLose = computed<number>(() => loseTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / loseTrades.value.length);
+const realRr = computed<number>(() => Math.abs(avgWin.value / avgLose.value));
 </script>
