@@ -1,6 +1,6 @@
 <template>
     <header>
-        <UContainer class="max-w-full py-4 lg:py-6 bg-background/75 backdrop-blur border-b -mb-px sticky top-0 z-50 border-gray-200 dark:border-gray-800">
+        <UContainer class="max-w-full py-4 lg:py-6 mb-0 sm:mb-4 bg-background/75 backdrop-blur border-b sticky top-0 z-50 border-primary-200 dark:border-primary-800">
             <div class="flex justify-between items-center">
                 <h1 class="text-xl font-bold">Trading <span class="text-primary">Journal</span></h1>
                 <UButton label="New Trade" icon="i-ph-plus-duotone"/>
