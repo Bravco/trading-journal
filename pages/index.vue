@@ -1,6 +1,6 @@
 <template>
     <div>
-        <UContainer class="max-w-full pt-4 lg:pt-6">
+        <UContainer class="max-w-full pt-4 lg:pt-6 flex flex-col gap-6 ">
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <UCard>
                     <template #header>
@@ -16,9 +16,11 @@
                             </UTooltip>
                         </div>
                     </template>
-                    <span :class="['text-3xl', 'font-bold', { 'text-green-500': totalPnl > 0 }, { 'text-red-500': totalPnl < 0 }]">
-                        {{ `${totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)} €` }}
-                    </span>
+                    <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
+                        <span :class="['text-3xl', 'font-bold', { 'text-green-500': totalPnl > 0 }, { 'text-red-500': totalPnl < 0 }]">
+                            {{ `${totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)} €` }}
+                        </span>
+                    </div>
                 </UCard>
                 <UCard>
                     <template #header>
@@ -29,7 +31,10 @@
                             </UTooltip>
                         </div>
                     </template>
-                    <span class="text-2xl font-bold">{{ `${winRate.toFixed(2)}%` }}</span>
+                    <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
+                        <span class="text-2xl font-bold">{{ `${winRate.toFixed(2)}%` }}</span>
+                        <RadialProgress :progress="winRate"/>
+                    </div>
                 </UCard>
                 <UCard>
                     <template #header>
@@ -40,7 +45,9 @@
                             </UTooltip>
                         </div>
                     </template>
-                    <span class="text-2xl font-bold">{{ profitFactor.toFixed(2) }}</span>
+                    <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
+                        <span class="text-2xl font-bold">{{ profitFactor.toFixed(2) }}</span>
+                    </div>
                 </UCard>
                 <UCard>
                     <template #header>
@@ -51,7 +58,7 @@
                             </UTooltip>
                         </div>
                     </template>
-                    <div class="flex items-center gap-8">
+                    <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
                         <span class="text-2xl font-bold">{{ realRr.toFixed(2) }}</span>
                         <div class="w-full flex flex-col gap-1">
                             <UProgress :value="avgWin" :max="avgWin + Math.abs(avgLose)" color="green" :ui="{ progress: { track: '[&::-webkit-progress-bar]:bg-red-500 [&::-webkit-progress-bar]:dark:bg-red-500 [@supports(selector(&::-moz-progress-bar))]:bg-red-500 [@supports(selector(&::-moz-progress-bar))]:dark:bg-red-500' } }"/>
