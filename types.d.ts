@@ -1,8 +1,15 @@
 type Trade = {
-    symbol: string,
     open: Date,
+    symbol: string,
     strategy: string,
-    pnl: number,
+    risk: number,
     rr: number,
+    pnl: number,
     imageUrl: string,
+    tags: Tag[],
+};
+
+type Tag = {
+    label: string,
+    color: string,
 };

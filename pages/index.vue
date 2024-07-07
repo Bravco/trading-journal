@@ -96,16 +96,22 @@
                     <template #open-data="{ row }">
                         <span>{{ `${row.open.toDateString()} ${row.open.toLocaleTimeString([], { timeStyle: "short" })}` }}</span>
                     </template>
+                    <template #symbol-data="{ row }">
+                        <span class="font-medium">{{ row.symbol }}</span>
+                    </template>
                     <template #strategy-data="{ row }">
                         <UBadge :label="row.strategy" variant="subtle"/>
+                    </template>
+                    <template #rr-data="{ row }">
+                        <span>{{ row.rr.toFixed(2) }}</span>
+                    </template>
+                    <template #risk-data="{ row }">
+                        <span>{{ `${row.risk.toFixed(2)} €` }}</span>
                     </template>
                     <template #pnl-data="{ row }">
                         <span :class="['font-medium', { 'text-green-500': row.pnl > 0 }, { 'text-red-500': row.pnl < 0 }]">
                             {{ `${row.pnl >= 0 ? "+" : ""}${row.pnl.toFixed(2)} €` }}
                         </span>
-                    </template>
-                    <template #rr-data="{ row }">
-                        <span>{{ row.rr.toFixed(2) }}</span>
                     </template>
                     <template #status-data="{ row }">
                         <UBadge v-if="row.pnl > 0" label="Win" variant="subtle" color="green"/>
@@ -113,8 +119,8 @@
                         <UBadge v-if="row.pnl === 0" label="Breakeven" variant="subtle" color="blue"/>
                     </template>
                     <template #imageUrl-data="{ row }">
-                        <ULink :to="row.imageUrl" target="_blank">
-                            <NuxtImg :src="row.imageUrl" class="h-8 rounded cursor-pointer hover:opacity-50 transition"/>
+                        <ULink :to="row.imageUrl" target="_blank" class="cursor-pointer hover:opacity-50 transition">
+                            <NuxtImg :src="row.imageUrl" class="h-8"/>
                         </ULink>
                     </template>
                     <template #actions-data="{ row }">
@@ -128,94 +134,192 @@
                 </div>
             </UCard>
         </UContainer>
+        <USlideover v-model="isSlideoverOpen" :ui="{ width: 'max-w-xl' }">
+            <UCard class="h-full" :ui="{ rounded: 'rounded-none' }">
+                <template #header>
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <UIcon name="i-heroicons-eye"/>
+                            <h1 class="text-lg font-medium">Preview Trade</h1>
+                        </div>
+                        <UButton @click="isSlideoverOpen = false" icon="i-heroicons-x-mark" variant="ghost" color="gray"/>
+                    </div>
+                </template>
+                <div v-if="previewedTrade" class="flex flex-col gap-4">
+                    <ULink :to="previewedTrade.imageUrl" target="_blank" class="cursor-pointer hover:opacity-50 transition">
+                        <NuxtImg :src="previewedTrade.imageUrl"/>
+                    </ULink>
+                    <div class="flex flex-col">
+                        <UButton 
+                            @click="() => {
+                                if (previewedTrade) {
+                                    clipboard.copy(previewedTrade.imageUrl);
+                                    toast.add({ title: 'Copied to clipboard' });
+                                }
+                            }" 
+                            icon="i-heroicons-clipboard-document" 
+                            :label="previewedTrade.imageUrl" 
+                            variant="link" 
+                            :padded="false" 
+                            color="gray" 
+                            class="text-xs mb-2 active:opacity-50"
+                        />
+                        <span class="text-sm">{{ `${previewedTrade.open.toDateString()} ${previewedTrade.open.toLocaleTimeString([], { timeStyle: "short" })}` }}</span>
+                        <div class="flex items-center gap-2">
+                            <h2 class="font-medium text-xl">{{ previewedTrade.symbol }}</h2>
+                            <UBadge v-if="previewedTrade.pnl > 0" label="Win" variant="subtle" color="green"/>
+                            <UBadge v-if="previewedTrade.pnl < 0" label="Lose" variant="subtle" color="red"/>
+                            <UBadge v-if="previewedTrade.pnl === 0" label="Breakeven" variant="subtle" color="blue"/>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <span>Risk Reward: <span class="font-medium">{{ previewedTrade.rr.toFixed(2) }}</span></span>
+                        <span>Original Risk: <span class="font-medium text-red-500">{{ `${previewedTrade.risk.toFixed(2)} €` }}</span></span>
+                        <span>Net P&L: <span :class="['font-medium', 'text-green-500', { 'text-green-500': previewedTrade.pnl > 0 }, { 'text-red-500': previewedTrade.pnl < 0 }]">
+                            {{ `${previewedTrade.pnl >= 0 ? "+" : ""}${previewedTrade.pnl.toFixed(2)} €` }}
+                        </span></span>
+                    </div>
+                </div>
+                <template v-if="previewedTrade" #footer>
+                    <div class="mb-4">
+                        <h3 class="mb-2 font-medium text-lg">Strategy</h3>
+                        <UBadge :label="previewedTrade.strategy" variant="subtle"/>
+                    </div>
+                    <div>
+                        <h3 class="mb-2 font-medium text-lg">Tags</h3>
+                        <div class="flex flex-wrap gap-2">
+                            <UBadge v-for="tag in previewedTrade.tags" :label="tag.label" :color="tag.color" variant="subtle"/>
+                        </div>
+                    </div>
+                </template>
+            </UCard>
+        </USlideover>
     </div>
 </template>
 
 <script setup lang="ts">
+const clipboard = useCopyToClipboard();
+const toast = useToast();
+
 const columns = [
     { key: "open", label: "Open Date", sortable: true },
     { key: "symbol", label: "Symbol" },
     { key: "strategy", label: "Strategy" },
     { key: "rr", label: "Risk Reward", sortable: true },
+    { key: "risk", label: "Original Risk", sortable: true },
     { key: "pnl", label: "Net P&L", sortable: true },
     { key: "status", label: "Status" },
     { key: "imageUrl", label: "Image" },
     { key: "actions" },
 ];
 
+const tags: Tag[] = [
+    { label: "Liquidity Sweep", color: "orange" },
+    { label: "High Timeframe Fair Value Gap", color: "green" },
+    { label: "Fair Value Gap", color: "green" },
+    { label: "Inverse Fair Value Gap", color: "yellow" },
+    { label: "Break of Structure", color: "red" },
+];
+
 const trades = ref<Trade[]>([
-    {
-        open: new Date("2024-07-05T15:35:00"),
-        symbol: "NQ",
-        strategy: "Liquidity Sweep + FVG",
-        pnl: 10.72,
-        rr: 2.1,
-        imageUrl: "https://www.tradingview.com/x/IqNKyxNQ/",
-    },
     {
         open: new Date("2024-07-05T19:58:00"),
         symbol: "YM",
         strategy: "Liquidity Sweep + IFVG",
+        risk: 8.7,
         pnl: 5.13,
         rr: 1.17,
         imageUrl: "https://www.tradingview.com/x/IqNKyxNQ/",
+        tags: [ tags[0] ],
+    },
+    {
+        open: new Date("2024-07-05T15:35:00"),
+        symbol: "NQ",
+        strategy: "Liquidity Sweep + FVG",
+        risk: 10,
+        pnl: 21,
+        rr: 2.1,
+        imageUrl: "https://www.tradingview.com/x/IqNKyxNQ/",
+        tags: tags,
     },
     {
         open: new Date("2024-07-04T14:24:00"),
         symbol: "GBPUSD",
         strategy: "Demand + FVG",
+        risk: 10.49,
         pnl: -7.64,
         rr: 3.08,
         imageUrl: "https://www.tradingview.com/x/IqNKyxNQ/",
+        tags: [ tags[3] ],
     },
     {
         open: new Date("2024-07-03T15:11:00"),
         symbol: "EURUSD",
         strategy: "Demand + IFVG",
+        risk: 9.87,
         pnl: -9.87,
         rr: 1.93,
         imageUrl: "https://www.tradingview.com/x/IqNKyxNQ/",
+        tags: [ tags[3] ],
     },
     {
         open: new Date("2024-07-02T16:02:00"),
         symbol: "NQ",
         strategy: "Liquidity Sweep + FVG",
+        risk: 10.1,
         pnl: 24.12,
         rr: 3.29,
         imageUrl: "https://www.tradingview.com/x/IqNKyxNQ/",
+        tags: [ tags[0] ],
     },
     {
         open: new Date("2024-07-02T19:41:00"),
         symbol: "NQ",
         strategy: "Liquidity Sweep + FVG",
+        risk: 9.97,
         pnl: 17.64,
         rr: 2.03,
         imageUrl: "https://www.tradingview.com/x/IqNKyxNQ/",
+        tags: [ tags[0] ],
     },
     {
         open: new Date("2024-07-01T09:55:00"),
         symbol: "NQ",
         strategy: "Liquidity Sweep + IFVG",
+        risk: 10.54,
         pnl: 20.94,
         rr: 2.53,
         imageUrl: "https://www.tradingview.com/x/IqNKyxNQ/",
+        tags: [ tags[0] ],
     },
     {
         open: new Date("2024-06-28T20:45:00"),
         symbol: "YM",
         strategy: "Liquidity Sweep + FVG",
+        risk: 9.15,
         pnl: 0,
         rr: 1.94,
         imageUrl: "https://www.tradingview.com/x/IqNKyxNQ/",
+        tags: [ tags[0] ],
     },
 ]);
 
-const tradeActions = (trade: Trade) => [
+const tradeActions = (trade : Trade) => [
+    [
+        {
+            label: "Preview",
+            icon: "i-heroicons-eye",
+            click: () => {
+                isSlideoverOpen.value = true;
+                previewedTrade.value = trade;
+            },
+        },
+    ],
     [
         {
             label: "Edit",
             icon: "i-heroicons-pencil-square",
-            click: () => console.log("Edit", trade),
+            click: () => {},
         },
         {
             label: "Duplicate",
@@ -234,6 +338,9 @@ const tradeActions = (trade: Trade) => [
 
 const tradesPerPage: number = 10;
 const page = ref<number>(1);
+
+const isSlideoverOpen = ref<boolean>(false);
+const previewedTrade = ref<Trade | null>(null);
 
 const sort = ref({
     column: "open",

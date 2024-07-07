@@ -3,9 +3,7 @@
         <UContainer class="max-w-full py-4 lg:py-6 mb-0 sm:mb-4 bg-background/75 backdrop-blur border-b sticky top-0 z-50 border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center">
                 <h1 class="text-xl font-bold">Trading <span class="text-primary">Journal</span></h1>
-                <UDropdown :items="addActions">
-                    <UButton icon="i-heroicons-plus" variant="solid" size="lg" :ui="{ rounded: 'rounded-full' }"/>
-                </UDropdown>
+                <UButton @click="" label="New Trade" icon="i-heroicons-document-plus" variant="solid"/>
             </div>
 
         </UContainer>
@@ -29,22 +27,9 @@
             </span>
         </UContainer>
     </footer>
-</template>
 
-<script lang="ts" setup>
-    const addActions = [[
-        {
-            label: "New Strategy",
-            icon: "i-heroicons-presentation-chart-line",
-            click: () => console.log("New Strategy"),
-        },
-        {
-            label: "New Trade",
-            icon: "i-heroicons-document-plus",
-            click: () => console.log("New Trade"),
-        },
-    ]];
-</script>
+    <UNotifications/>
+</template>
 
 <style>
     :root {
