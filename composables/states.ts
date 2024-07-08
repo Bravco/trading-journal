@@ -1,3 +1,24 @@
+export const colors: string[] = [
+    "gray",
+    "red",
+    "amber",
+    "orange",
+    "yellow",
+    "lime",
+    "green",
+    "emerald",
+    "teal",
+    "cyan",
+    "sky",
+    "blue",
+    "indigo",
+    "violet",
+    "purple",
+    "fuchsia",
+    "pink",
+    "rose",
+];
+
 export const tags: Tag[] = [
     { label: "Liquidity Sweep", color: "orange" },
     { label: "High Timeframe Fair Value Gap", color: "green" },

@@ -58,15 +58,37 @@
                         <UInput v-model="strategyInput" type="text">
                             <template #trailing>
                                 <UDropdown :items="strategyOptions" class="pointer-events-auto">
-                                    <UIcon name="i-heroicons-chevron-down-20-solid "/>
+                                    <UIcon name="i-heroicons-chevron-down "/>
                                 </UDropdown>
                             </template>
                         </UInput>
                     </UFormGroup>
                 </div>
                 <UFormGroup label="Tags" name="tags">
-                    <UTextarea/>
+                    <div class="flex items-center justify-between gap-2">
+                        <UButton @click="pushNewTag()" icon="i-heroicons-plus"/>
+                        <UInput v-model="tagInputLabel" type="text" class="w-full">
+                            <template #trailing>
+                                <UDropdown :items="tagOptions" class="pointer-events-auto" :ui="{ width: 'w-fit' }">
+                                    <UIcon name="i-heroicons-chevron-down "/>
+                                    <template v-for="color in colors" #[color]="{ item: tag }">
+                                        <UBadge :label="tag.label" :color="color" variant="subtle"/>
+                                    </template>
+                                </UDropdown>
+                            </template>
+                        </UInput>
+                        <UDropdown :ui="{ width: 'w-fit', padding: 'grid grid-cols-5' }" :items="colorOptions">
+                            <UButton icon="i-heroicons-swatch" variant="ghost" :color="tagInputColor"/>
+                            <template v-for="color in colors" #[color]="{}">
+                                <span :class="['inline-block', 'w-3', 'h-3', 'rounded-full', `bg-${color}-500`]"/>
+                            </template>
+                        </UDropdown>
+                    </div>
+                    <div class="min-h-11 flex flex-wrap gap-2 mt-2 p-2.5 rounded-md ring-1 ring-inset ring-gray-300 dark:ring-gray-700">
+                        <UBadge v-for="tag in inputtedTags" :label="tag.label" :color="tag.color" variant="subtle" class="h-fit"/>
+                    </div>
                 </UFormGroup>
+                <UDivider/>
                 <UButton type="submit" label="Submit"/>
             </UForm>
         </UCard>
@@ -82,8 +104,41 @@
         })),
     ];
 
+    const tagOptions: any[] = [
+        tags.map(tag => ({
+            label: tag.label,
+            slot: tag.color,
+            click: () => {
+                tagInputLabel.value = tag.label;
+                tagInputColor.value = tag.color;
+            },
+        })),
+    ];
+
+    const colorOptions: any[] = [
+        colors.map(color => ({
+            slot: color,
+            click: () => tagInputColor.value = color,
+        })),
+    ];
+
     const isSlideoverOpen = ref<boolean>(false);
     const strategyInput = ref<string | null>();
+    const tagInputLabel = ref<string | null>(null);
+    const tagInputColor = ref<string>(colors[0]);
+    const inputtedTags = ref<Tag[]>([]);
+
+    function pushNewTag() {
+        if (tagInputLabel.value !== null && tagInputLabel.value !== "null" && tagInputColor.value !== null) {
+            inputtedTags.value.push({
+                label: tagInputLabel.value,
+                color: tagInputColor.value,
+            });
+            tagInputLabel.value = null;
+            tagInputColor.value = colors[0];
+            console.log(inputtedTags.value);
+        }
+    }
 </script>
 
 <style>
