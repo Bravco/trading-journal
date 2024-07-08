@@ -41,13 +41,13 @@
                         <UInput type="time"/>
                     </UFormGroup>
                     <UFormGroup label="Risk Reward" name="rr">
-                        <UInput type="number" min="0"/>
+                        <UInput type="decimal" min="0"/>
                     </UFormGroup>
                     <UFormGroup label="Original Risk" name="risk">
-                        <UInput type="number" min="0"/>
+                        <UInput type="decimal" min="0"/>
                     </UFormGroup>
                     <UFormGroup label="Net P&L" name="pnl">
-                        <UInput type="number"/>
+                        <UInput type="decimal"/>
                     </UFormGroup>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
