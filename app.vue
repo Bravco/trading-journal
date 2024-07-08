@@ -66,7 +66,6 @@
                 </div>
                 <UFormGroup label="Tags" name="tags">
                     <div class="flex items-center justify-between gap-2">
-                        <UButton @click="pushNewTag()" icon="i-heroicons-plus"/>
                         <UInput v-model="tagInputLabel" type="text" class="w-full">
                             <template #trailing>
                                 <UDropdown :items="tagOptions" class="pointer-events-auto" :ui="{ width: 'w-fit' }">
@@ -83,9 +82,17 @@
                                 <span :class="['inline-block', 'w-3', 'h-3', 'rounded-full', `bg-${color}-500`]"/>
                             </template>
                         </UDropdown>
+                        <UButton @click="pushNewTag()" icon="i-heroicons-plus"/>
                     </div>
                     <div class="min-h-11 flex flex-wrap gap-2 mt-2 p-2.5 rounded-md ring-1 ring-inset ring-gray-300 dark:ring-gray-700">
-                        <UBadge v-for="tag in inputtedTags" :label="tag.label" :color="tag.color" variant="subtle" class="h-fit"/>
+                        <UBadge 
+                            v-for="tag in inputtedTags" 
+                            @click="inputtedTags = inputtedTags.filter(t => t !== tag)" 
+                            :label="tag.label" 
+                            :color="tag.color" 
+                            variant="subtle" 
+                            class="h-fit cursor-pointer"
+                        />
                     </div>
                 </UFormGroup>
                 <UDivider/>
@@ -108,10 +115,7 @@
         tags.map(tag => ({
             label: tag.label,
             slot: tag.color,
-            click: () => {
-                tagInputLabel.value = tag.label;
-                tagInputColor.value = tag.color;
-            },
+            click: () => inputtedTags.value.push(tag),
         })),
     ];
 

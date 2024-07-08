@@ -1,8 +1,8 @@
 export const colors: string[] = [
     "gray",
     "red",
-    "amber",
     "orange",
+    "amber",
     "yellow",
     "lime",
     "green",
