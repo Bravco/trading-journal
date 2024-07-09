@@ -180,7 +180,7 @@
                         <h3 class="mb-2 font-medium text-lg">Strategy</h3>
                         <UBadge :label="previewedTrade.strategy" variant="subtle"/>
                     </div>
-                    <div>
+                    <div v-if="previewedTrade.tags.length > 0">
                         <h3 class="mb-2 font-medium text-lg">Tags</h3>
                         <div class="flex flex-wrap gap-2">
                             <UBadge v-for="tag in previewedTrade.tags" :label="tag.label" :color="tag.color" variant="subtle"/>

@@ -19,12 +19,20 @@ export const colors: string[] = [
     "rose",
 ];
 
-export const strategies: string[] = [
-    "Liquidity Sweep + FVG",
-    "Liquidity Sweep + IFVG",
-    "Demand + FVG",
-    "Demand + IFVG",
-];
+export const tags = computed<Tag[]>(() => {
+    const trades = useTrades();
+
+    return Array.from(new Set(trades.value.flatMap(trade => trade.tags.map(tag => JSON.stringify(tag)))))
+        .map(tagStr => JSON.parse(tagStr))
+        .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+});
+
+export const strategies = computed<string[]>(() => {
+    const trades = useTrades();
+
+    return Array.from(new Set(trades.value.flatMap(trade => trade.strategy)))
+        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+});
 
 export function isTag(obj: any): obj is Tag {
     return obj &&

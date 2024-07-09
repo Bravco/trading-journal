@@ -1,22 +1,3 @@
-export const useTags = () => useState<Tag[]>("tags", () => [
-    {
-        label: "Demand Zone",
-        color: "red",
-    },
-    {
-        label: "Fair Value Gap",
-        color: "green",
-    },
-    {
-        label: "Inverse Fair Value Gap",
-        color: "yellow",
-    },
-    {
-        label: "Liquidity Sweep",
-        color: "orange",
-    },
-]);
-
 export const useTrades = () => useState<Trade[]>("trades", () => [
     {
         open: new Date("2024-07-05T19:58:00"),

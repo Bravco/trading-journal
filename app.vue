@@ -108,7 +108,6 @@
     import { object, string, number, date, array } from "yup";
 
     const trades = useTrades();
-    const tags = useTags();
 
     const schema = object({
         open: date().required("Open Date is required"),
@@ -138,12 +137,12 @@
     
     const state = reactive<any>({ ...initialState });
 
-    const strategyOptions: any[] = [
-        strategies.map(strategy => ({
+    const strategyOptions = computed<any>(() => [
+        strategies.value.map(strategy => ({
             label: strategy,
             click: () => state.strategy = strategy,
         })),
-    ];
+    ]);
 
     const tagOptions = computed<any[]>(() => [
         tags.value.map(tag => ({
@@ -186,17 +185,6 @@
         };
 
         trades.value.push(newTrade);
-
-        const allTags = [
-            ...tags.value,
-            ...newTrade.tags,
-        ];
-
-        tags.value = allTags.filter((tag1, i, arr) => 
-            arr.findIndex(tag2 =>
-                JSON.stringify(tag2) === JSON.stringify(tag1)
-            ) === i
-        );
         
         Object.assign(state, initialState);
         state.tags = [];
