@@ -14,5 +14,8 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "yup": "^1.4.0"
+  }
 }

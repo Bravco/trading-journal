@@ -195,6 +195,7 @@
 <script setup lang="ts">
 const clipboard = useCopyToClipboard();
 const toast = useToast();
+const trades = useTrades();
 
 const columns = [
     { key: "open", label: "Open Date", sortable: true },
@@ -206,8 +207,6 @@ const columns = [
     { key: "status", label: "Status" },
     { key: "actions" },
 ];
-
-const trades = useTrades();
 
 const tradeActions = (trade : Trade) => [
     [

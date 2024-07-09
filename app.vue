@@ -29,33 +29,32 @@
                     <UButton @click="isSlideoverOpen = false" icon="i-heroicons-x-mark" variant="ghost" color="gray"/>
                 </div>
             </template>
-            <UForm @submit="isSlideoverOpen = false" class="space-y-4">
+            <UForm @submit="onSubmit" @keydown.enter="$event.preventDefault()" :schema="schema" :state="state" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <UFormGroup label="Open Date" name="open" required>
+                        <UInput v-model="state.open" type="datetime-local"/>
+                    </UFormGroup>
+                    <UFormGroup label="Symbol" name="symbol" required>
+                        <UInput v-model="state.symbol" type="text"/>
+                    </UFormGroup>
+                </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <UFormGroup label="Symbol" name="symbol">
-                        <UInput type="text"/>
+                    <UFormGroup label="Risk Reward" name="rr" required>
+                        <UInput v-model="state.rr" type="decimal" min="0"/>
                     </UFormGroup>
-                    <UFormGroup label="Open Date" name="openDate">
-                        <UInput type="date"/>
+                    <UFormGroup label="Original Risk" name="risk" required>
+                        <UInput v-model="state.risk" type="decimal" min="0"/>
                     </UFormGroup>
-                    <UFormGroup label="Open Time" name="openTime">
-                        <UInput type="time"/>
-                    </UFormGroup>
-                    <UFormGroup label="Risk Reward" name="rr">
-                        <UInput type="decimal" min="0"/>
-                    </UFormGroup>
-                    <UFormGroup label="Original Risk" name="risk">
-                        <UInput type="decimal" min="0"/>
-                    </UFormGroup>
-                    <UFormGroup label="Net P&L" name="pnl">
-                        <UInput type="decimal"/>
+                    <UFormGroup label="Net P&L" name="pnl" required>
+                        <UInput v-model="state.pnl" type="decimal"/>
                     </UFormGroup>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <UFormGroup label="Image Url" name="imageUrl">
-                        <UInput type="text"/>
+                    <UFormGroup label="Image Url" name="imageUrl" required>
+                        <UInput v-model="state.imageUrl" type="text"/>
                     </UFormGroup>
-                    <UFormGroup label="Strategy" name="strategy">
-                        <UInput v-model="strategyInput" type="text">
+                    <UFormGroup label="Strategy" name="strategy" required>
+                        <UInput v-model="state.strategy" type="text">
                             <template #trailing>
                                 <UDropdown :items="strategyOptions" class="pointer-events-auto">
                                     <UIcon name="i-heroicons-chevron-down "/>
@@ -66,7 +65,7 @@
                 </div>
                 <UFormGroup label="Tags" name="tags">
                     <div class="flex items-center justify-between gap-2">
-                        <UInput v-model="tagInputLabel" type="text" class="w-full">
+                        <UInput @keydown.enter="pushNewTag" v-model="state.tagLabel" type="text" class="w-full">
                             <template #trailing>
                                 <UDropdown :items="tagOptions" class="pointer-events-auto" :ui="{ width: 'w-fit' }">
                                     <UIcon name="i-heroicons-chevron-down "/>
@@ -77,17 +76,19 @@
                             </template>
                         </UInput>
                         <UDropdown :ui="{ width: 'w-fit', padding: 'grid grid-cols-5' }" :items="colorOptions">
-                            <UButton icon="i-heroicons-swatch" variant="ghost" :color="tagInputColor"/>
+                            <UButton icon="i-heroicons-swatch" variant="ghost" :color="state.tagColor ?? 'gray'"/>
                             <template v-for="color in colors" #[color]="{}">
-                                <span :class="['inline-block', 'w-3', 'h-3', 'rounded-full', `bg-${color}-500`]"/>
+                                <UTooltip :text="color" class="capitalize">
+                                    <span :class="['inline-block', 'w-3', 'h-3', 'rounded-full', `bg-${color}-500`]"/>
+                                </UTooltip>
                             </template>
                         </UDropdown>
-                        <UButton @click="pushNewTag()" icon="i-heroicons-plus"/>
+                        <UButton @click="pushNewTag" icon="i-heroicons-plus"/>
                     </div>
                     <div class="min-h-11 flex flex-wrap gap-2 mt-2 p-2.5 rounded-md ring-1 ring-inset ring-gray-300 dark:ring-gray-700">
                         <UBadge 
-                            v-for="tag in inputtedTags" 
-                            @click="inputtedTags = inputtedTags.filter(t => t !== tag)" 
+                            v-for="tag in state.tags" 
+                            @click="state.tags = state.tags.filter((t: Tag) => t !== tag)" 
                             :label="tag.label" 
                             :color="tag.color" 
                             variant="subtle" 
@@ -104,63 +105,101 @@
 </template>
 
 <script lang="ts" setup>
+    import { object, string, number, date, array } from "yup";
+
+    const trades = useTrades();
+    const tags = useTags();
+
+    const schema = object({
+        open: date().required("Open Date is required"),
+        symbol: string().required("Symbol is required"),
+        strategy: string().required("Strategy is required"),
+        risk: number().positive("Original Risk must be a positive number").required("Original Risk is required"),
+        rr: number().positive("Risk Reward must be a positive number").required("Risk Reward is required"),
+        pnl: number().required("Net P&L is required"),
+        imageUrl: string().url("Image Url must be a valid URL").required("Image Url is required"),
+        tagLabel: string(),
+        tagColor: string(),
+        tags: array(),
+    });
+
+    const initialState: any = {
+        open: undefined,
+        symbol: undefined,
+        strategy: undefined,
+        risk: undefined,
+        rr: undefined,
+        pnl: undefined,
+        imageUrl: undefined,
+        tagLabel: undefined,
+        tagColor: undefined,
+        tags: [],
+    };
+    
+    const state = reactive<any>({ ...initialState });
+
     const strategyOptions: any[] = [
         strategies.map(strategy => ({
             label: strategy,
-            click: () => strategyInput.value = strategy,
+            click: () => state.strategy = strategy,
         })),
     ];
 
-    const tagOptions: any[] = [
-        tags.map(tag => ({
+    const tagOptions = computed<any[]>(() => [
+        tags.value.map(tag => ({
             label: tag.label,
             slot: tag.color,
-            click: () => inputtedTags.value.push(tag),
+            click: () => state.tags.push(tag),
         })),
-    ];
+    ]);
 
     const colorOptions: any[] = [
         colors.map(color => ({
             slot: color,
-            click: () => tagInputColor.value = color,
+            click: () => state.tagColor = color,
         })),
     ];
 
     const isSlideoverOpen = ref<boolean>(false);
-    const strategyInput = ref<string | null>();
-    const tagInputLabel = ref<string | null>(null);
-    const tagInputColor = ref<string>(colors[0]);
-    const inputtedTags = ref<Tag[]>([]);
 
     function pushNewTag() {
-        if (tagInputLabel.value !== null && tagInputLabel.value !== "null" && tagInputColor.value !== null) {
-            inputtedTags.value.push({
-                label: tagInputLabel.value,
-                color: tagInputColor.value,
+        if (typeof state.tagLabel === "string" && state.tagLabel.trim().length > 0) {
+            state.tags.push({
+                label: state.tagLabel,
+                color: state.tagColor ?? "gray",
             });
-            tagInputLabel.value = null;
-            tagInputColor.value = colors[0];
-            console.log(inputtedTags.value);
+            state.tagLabel = undefined;
+            state.tagColor = undefined;
         }
     }
+
+    async function onSubmit() {
+        const newTrade: Trade = {
+            open: new Date(state.open),
+            symbol: state.symbol,
+            strategy: state.strategy,
+            risk: parseFloat(state.risk),
+            rr: parseFloat(state.rr),
+            pnl: parseFloat(state.pnl),
+            imageUrl: state.imageUrl,
+            tags: state.tags ?? [],
+        };
+
+        trades.value.push(newTrade);
+
+        const allTags = [
+            ...tags.value,
+            ...newTrade.tags,
+        ];
+
+        tags.value = allTags.filter((tag1, i, arr) => 
+            arr.findIndex(tag2 =>
+                JSON.stringify(tag2) === JSON.stringify(tag1)
+            ) === i
+        );
+        
+        Object.assign(state, initialState);
+        state.tags = [];
+        isSlideoverOpen.value = false;
+    }
 </script>
-
-<style>
-    :root {
-        --ui-background: 255 255 255;
-        --ui-foreground: var(--color-gray-700);
-    }
-
-    .dark {
-        --ui-background: var(--color-gray-900);
-        --ui-foreground: var(--color-gray-200);
-        color-scheme: dark;
-    }
-
-    body {
-        --tw-bg-opacity: 1;
-        background-color: rgb(var(--ui-background) / var(--tw-bg-opacity));
-        --tw-text-opacity: 1;
-        color: rgb(var(--ui-foreground) / var(--tw-text-opacity));
-    }
-</style>

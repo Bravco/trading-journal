@@ -1,3 +1,8 @@
+type Tag = {
+    label: string,
+    color: string,
+};
+
 type Trade = {
     open: Date,
     symbol: string,
@@ -7,9 +12,4 @@ type Trade = {
     pnl: number,
     imageUrl: string,
     tags: Tag[],
-};
-
-type Tag = {
-    label: string,
-    color: string,
 };
