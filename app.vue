@@ -3,7 +3,7 @@
         <UContainer class="max-w-full py-4 lg:py-6 mb-0 sm:mb-4 bg-background/75 backdrop-blur border-b sticky top-0 z-50 border-gray-200 dark:border-gray-800">
             <div class="flex justify-between items-center">
                 <h1 class="text-xl font-bold">Trading <span class="text-primary">Journal</span></h1>
-                <UButton @click="isSlideoverOpen = true" label="New Trade" icon="i-heroicons-document-plus" variant="solid"/>
+                <UButton @click="openSlideover" label="New Trade" icon="i-heroicons-document-plus" variant="solid"/>
             </div>
 
         </UContainer>
@@ -160,6 +160,11 @@
     ];
 
     const isSlideoverOpen = ref<boolean>(false);
+
+    function openSlideover() {
+        state.open = (new Date()).toISOString().substring(0, 11) + (new Date()).toLocaleTimeString().substring(0, 5);
+        isSlideoverOpen.value = true;
+    }
 
     function pushNewTag() {
         if (typeof state.tagLabel === "string" && state.tagLabel.trim().length > 0) {
