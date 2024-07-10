@@ -24,9 +24,9 @@
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-2">
                         <UIcon name="i-heroicons-document-plus"/>
-                        <h1 class="text-lg font-medium">New Trade</h1>
+                        <h1 class="text-lg font-medium">{{ editedTrade === null ? "New Trade" : "Edit Trade" }}</h1>
                     </div>
-                    <UButton @click="isSlideoverOpen = false" icon="i-heroicons-x-mark" variant="ghost" color="gray"/>
+                    <UButton @click="closeSlideover" icon="i-heroicons-x-mark" variant="ghost" color="gray"/>
                 </div>
             </template>
             <UForm @submit="onSubmit" @keydown.enter="$event.preventDefault()" :schema="schema" :state="state" class="space-y-4">
@@ -97,7 +97,11 @@
                     </div>
                 </UFormGroup>
                 <UDivider/>
-                <UButton type="submit" label="Submit"/>
+                <UButton 
+                    type="submit" 
+                    :label="editedTrade === null ? 'Create' : 'Save'" 
+                    :icon="editedTrade === null ? 'i-heroicons-plus' : 'i-heroicons-check'"
+                />
             </UForm>
         </UCard>
     </USlideover>
@@ -108,6 +112,7 @@
     import { object, string, number, date, array } from "yup";
 
     const trades = useTrades();
+    const editedTrade = useEditedTrade();
 
     const schema = object({
         open: date().required("Open Date is required"),
@@ -162,8 +167,30 @@
     const isSlideoverOpen = ref<boolean>(false);
 
     function openSlideover() {
-        state.open = (new Date()).toISOString().substring(0, 11) + (new Date()).toLocaleTimeString().substring(0, 5);
+        function formatOpenDate(date: Date) {
+            const isoString = date.toISOString().substring(0, 11); // YYYY-MM-DDT
+            const timeString = date.toLocaleTimeString().substring(0, 5); // HH:MM
+            return isoString + timeString;
+        }
+
+        if (editedTrade.value === null) {
+            state.open = formatOpenDate(new Date());
+        } else {
+            Object.assign(state, {
+                ...initialState,
+                ...editedTrade.value,
+                open: formatOpenDate(editedTrade.value.open),
+            });
+        }
+
         isSlideoverOpen.value = true;
+    }
+
+    function closeSlideover() {
+        Object.assign(state, initialState);
+        state.tags = [];
+        editedTrade.value = null;
+        isSlideoverOpen.value = false;
     }
 
     function pushNewTag() {
@@ -189,10 +216,22 @@
             tags: state.tags ?? [],
         };
 
-        trades.value.push(newTrade);
+        if (editedTrade.value === null) {
+            trades.value.push(newTrade);
+        } else {
+            const index = useFindIndex(trades.value, trade => isEqual(trade, editedTrade.value));
+            
+            if (index !== -1) {
+                trades.value[index] = newTrade;
+            }
+        }
         
-        Object.assign(state, initialState);
-        state.tags = [];
-        isSlideoverOpen.value = false;
+        closeSlideover();
     }
+
+    watch(editedTrade, () => {
+        if (editedTrade.value !== null) {
+            openSlideover();
+        }
+    });
 </script>

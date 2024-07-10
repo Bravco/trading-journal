@@ -196,6 +196,7 @@
 const clipboard = useCopyToClipboard();
 const toast = useToast();
 const trades = useTrades();
+const editedTrade = useEditedTrade();
 
 const columns = [
     { key: "open", label: "Open Date", sortable: true },
@@ -223,7 +224,7 @@ const tradeActions = (trade : Trade) => [
         {
             label: "Edit",
             icon: "i-heroicons-pencil-square",
-            click: () => {},
+            click: () => editedTrade.value = trade,
         },
         {
             label: "Duplicate",

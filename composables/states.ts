@@ -1,3 +1,5 @@
+export const useEditedTrade = () => useState<Trade | null>("editedTrade", () => null);
+
 export const useTrades = () => useState<Trade[]>("trades", () => [
     {
         open: new Date("2024-07-05T19:58:00"),
