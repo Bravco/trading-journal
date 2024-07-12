@@ -1,7 +1,7 @@
 <template>
     <div>
-        <UContainer class="max-w-full pt-4 lg:pt-6 flex flex-col gap-6 ">
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div class="flex flex-col gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6">
                 <UCard>
                     <template #header>
                         <div class="h-4 md:h-6 flex items-center gap-2">
@@ -128,7 +128,7 @@
                     <UPagination v-model="page" :page-count="tradesPerPage" :total="trades.length" :max="3"/>
                 </div>
             </UCard>
-        </UContainer>
+        </div>
         <USlideover v-model="isSlideoverOpen" :ui="{ width: 'max-w-xl' }">
             <UCard class="h-full" :ui="{ rounded: 'rounded-none' }">
                 <template #header>

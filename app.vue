@@ -1,24 +1,36 @@
 <template>
-    <header>
-        <UContainer class="max-w-full py-4 lg:py-6 mb-0 sm:mb-4 bg-background/75 backdrop-blur border-b sticky top-0 z-50 border-gray-200 dark:border-gray-800">
-            <div class="flex justify-between items-center">
-                <h1 class="text-xl font-bold">Trading <span class="text-primary">Journal</span></h1>
-                <UButton @click="openSlideover" label="New Trade" icon="i-heroicons-document-plus" variant="solid"/>
+    <div class="fixed inset-0 flex overflow-auto">
+        <aside class="min-w-64 hidden lg:block"><Sidebar/></aside>
+        <div class="w-full grid">
+            <header>
+                <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-800">
+                    <div class="flex items-stretch gap-2">
+                        <UButton class="lg:hidden" @click="isSidebarSlideoverOpen = true" icon="i-heroicons-bars-3" variant="ghost" color="gray" square/>
+                        <h1 class="text-xl font-bold">Trading <span class="text-primary">Journal</span></h1>
+                    </div>
+                    <UButton @click="openSlideover" label="New Trade" icon="i-heroicons-document-plus" variant="solid"/>
+                </div>
+            </header>
+            <div class="overflow-y-auto p-4">
+                <main>
+                    <NuxtLayout>
+                        <NuxtPage/>
+                    </NuxtLayout>
+                </main>
+                <footer>
+                    <div class="w-full mt-4 text-center text-sm">Copyright &copy; 2024</div>
+                </footer>
             </div>
-
-        </UContainer>
-    </header>
-    <main>
-        <NuxtLayout>
-            <NuxtPage/>
-        </NuxtLayout>
-    </main>
-    <footer>
-        <UContainer class="max-w-full py-4 lg:py-6 mt-4 sm:mt-10 bg-background/75 backdrop-blur border-t border-gray-200 dark:border-gray-800 flex justify-center items-center text-sm">
-            <span>Copyright &copy; 2024</span>
-        </UContainer>
-    </footer>
-    <USlideover v-model="isSlideoverOpen" :ui="{ width: 'max-w-xl' }">
+        </div>
+    </div>
+    <USlideover v-model="isSidebarSlideoverOpen" side="left">
+        <Sidebar>
+            <template #closeButton>
+                <UButton class="lg:hidden" @click="isSidebarSlideoverOpen = false" icon="i-heroicons-bars-3" variant="ghost" color="gray" square/>
+            </template>
+        </Sidebar>
+    </USlideover>
+    <USlideover v-model="isTradeSlideoverOpen" :ui="{ width: 'max-w-xl' }">
         <UCard class="h-full" :ui="{ rounded: 'rounded-none' }">
             <template #header>
                 <div class="flex justify-between items-center">
@@ -164,7 +176,8 @@
         })),
     ];
 
-    const isSlideoverOpen = ref<boolean>(false);
+    const isSidebarSlideoverOpen = ref<boolean>(false);
+    const isTradeSlideoverOpen = ref<boolean>(false);
 
     function openSlideover() {
         function formatOpenDate(date: Date) {
@@ -183,14 +196,14 @@
             });
         }
 
-        isSlideoverOpen.value = true;
+        isTradeSlideoverOpen.value = true;
     }
 
     function closeSlideover() {
         Object.assign(state, initialState);
         state.tags = [];
         editedTrade.value = null;
-        isSlideoverOpen.value = false;
+        isTradeSlideoverOpen.value = false;
     }
 
     function pushNewTag() {
