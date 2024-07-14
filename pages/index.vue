@@ -2,7 +2,7 @@
     <div>
         <div class="flex flex-col gap-6">
             <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6">
-                <UCard>
+                <UCard class="relative">
                     <template #header>
                         <div class="h-4 md:h-6 flex items-center gap-2">
                             <span class="text-sm">Net P&L</span>
@@ -12,10 +12,11 @@
                         </div>
                     </template>
                     <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
-                        <span :class="['text-3xl', 'font-bold', { 'text-green-500': totalPnl > 0 }, { 'text-red-500': totalPnl < 0 }]">
+                        <span :class="['z-10', 'text-3xl', 'font-bold', { 'text-green-500': totalPnl > 0 }, { 'text-red-500': totalPnl < 0 }]">
                             {{ `${totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)} €` }}
                         </span>
                     </div>
+                    <VChart ref="chart" class="w-full h-2/6 absolute left-0 bottom-0" :option="chartOption"/>
                 </UCard>
                 <UCard>
                     <template #header>
@@ -193,87 +194,135 @@
 </template>
 
 <script setup lang="ts">
-const clipboard = useCopyToClipboard();
-const toast = useToast();
-const trades = useTrades();
-const editedTrade = useEditedTrade();
+    const clipboard = useCopyToClipboard();
+    const toast = useToast();
+    const trades = useTrades();
+    const editedTrade = useEditedTrade();
 
-const columns = [
-    { key: "open", label: "Open Date", sortable: true },
-    { key: "symbol", label: "Symbol" },
-    { key: "strategy", label: "Strategy" },
-    { key: "rr", label: "Risk Reward", sortable: true },
-    { key: "risk", label: "Original Risk", sortable: true },
-    { key: "pnl", label: "Net P&L", sortable: true },
-    { key: "status", label: "Status" },
-    { key: "actions" },
-];
+    const columns = [
+        { key: "open", label: "Open Date", sortable: true },
+        { key: "symbol", label: "Symbol" },
+        { key: "strategy", label: "Strategy" },
+        { key: "rr", label: "Risk Reward", sortable: true },
+        { key: "risk", label: "Original Risk", sortable: true },
+        { key: "pnl", label: "Net P&L", sortable: true },
+        { key: "status", label: "Status" },
+        { key: "actions" },
+    ];
 
-const tradeActions = (trade : Trade) => [
-    [
-        {
-            label: "Preview",
-            icon: "i-heroicons-eye",
-            click: () => {
-                isSlideoverOpen.value = true;
-                previewedTrade.value = trade;
+    const tradeActions = (trade : Trade) => [
+        [
+            {
+                label: "Preview",
+                icon: "i-heroicons-eye",
+                click: () => {
+                    isSlideoverOpen.value = true;
+                    previewedTrade.value = trade;
+                },
             },
+        ],
+        [
+            {
+                label: "Edit",
+                icon: "i-heroicons-pencil-square",
+                click: () => editedTrade.value = trade,
+            },
+            {
+                label: "Duplicate",
+                icon: "i-heroicons-document-duplicate",
+                click: () => trades.value.push(trade),
+            },
+        ],
+        [
+            {
+                label: "Delete",
+                icon: "i-heroicons-trash",
+                click: () => trades.value = trades.value.filter(t => t !== trade),
+            },
+        ],
+    ];
+
+    const tradesPerPage: number = 10;
+    const page = ref<number>(1);
+
+    const isSlideoverOpen = ref<boolean>(false);
+    const previewedTrade = ref<Trade | null>(null);
+
+    const sort = ref({
+        column: "open",
+        direction: "desc",
+    });
+
+    const chart = ref();
+    
+    const chartOption = computed<ECOption>(() => ({
+        xAxis: {
+            type: "category",
+            boundaryGap: false,
+            axisLabel: { show: false },
+            axisLine: { show: false },
+            axisTick: { show: false },
+            splitLine: { show: false },
         },
-    ],
-    [
-        {
-            label: "Edit",
-            icon: "i-heroicons-pencil-square",
-            click: () => editedTrade.value = trade,
+        yAxis: { 
+            type: "value",
+            axisLabel: { show: false },
+            axisLine: { show: false },
+            axisTick: { show: false },
+            splitLine: { show: false },
         },
-        {
-            label: "Duplicate",
-            icon: "i-heroicons-document-duplicate",
-            click: () => trades.value.push(trade),
-        },
-    ],
-    [
-        {
-            label: "Delete",
-            icon: "i-heroicons-trash",
-            click: () => trades.value = trades.value.filter(t => t !== trade),
-        },
-    ],
-];
+        series: [{
+            data: cumulativePnl.value,
+            type: "line",
+            areaStyle: {},
+            smooth: true,
+        }],
+        grid: {
+            left: 0,
+            top: 0,
+            right: 0,
+            bottom: 0
+        }
+    }));
 
-const tradesPerPage: number = 10;
-const page = ref<number>(1);
+    const rows = computed<Trade[]>(() => trades.value.slice((page.value - 1) * tradesPerPage, page.value * tradesPerPage));
 
-const isSlideoverOpen = ref<boolean>(false);
-const previewedTrade = ref<Trade | null>(null);
+    const winTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl > 0));
+    const loseTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl < 0));
+    const breakevenTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl === 0));
 
-const sort = ref({
-    column: "open",
-    direction: "desc",
-});
+    const grossProfit = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0));
+    const grossLoss = computed<number>(() => loseTrades.value.reduce((acc, trade) => acc + Math.abs(trade.pnl), 0));
 
-const rows = computed<Trade[]>(() => trades.value.slice((page.value - 1) * tradesPerPage, page.value * tradesPerPage));
+    const totalPnl = computed<number>(() => trades.value.reduce((acc, trade) => acc + trade.pnl, 0));
+    const winRate = computed<number>(() => (winTrades.value.length / trades.value.length) * 100);
+    const breakevenRate = computed<number>(() => (breakevenTrades.value.length / trades.value.length) * 100);
+    const profitFactor = computed<number>(() => grossProfit.value / grossLoss.value);
 
-const winTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl > 0));
-const loseTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl < 0));
-const breakevenTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl === 0));
+    const avgWin = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / winTrades.value.length);
+    const avgLose = computed<number>(() => {
+        const value = loseTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / loseTrades.value.length;
+        if (value) {
+            return value;
+        } else {
+            return 0;
+        }
+    });
+    const realRr = computed<number>(() => Math.abs(avgWin.value / avgLose.value));
 
-const grossProfit = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0));
-const grossLoss = computed<number>(() => loseTrades.value.reduce((acc, trade) => acc + Math.abs(trade.pnl), 0));
+    onMounted(() => {
+        window.addEventListener("resize", handleResize);
 
-const totalPnl = computed<number>(() => trades.value.reduce((acc, trade) => acc + trade.pnl, 0));
-const winRate = computed<number>(() => (winTrades.value.length / trades.value.length) * 100);
-const breakevenRate = computed<number>(() => (breakevenTrades.value.length / trades.value.length) * 100);
-const profitFactor = computed<number>(() => grossProfit.value / grossLoss.value);
+        const canvas = chart.value.getDom().querySelector("canvas") as HTMLCanvasElement;
 
-const avgWin = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / winTrades.value.length);
-const avgLose = computed<number>(() => {
-    const value = loseTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / loseTrades.value.length;
-    if (value) {
-        return value;
-    } else {
-        return 0;
-    }
-});
-const realRr = computed<number>(() => Math.abs(avgWin.value / avgLose.value));
+        if (canvas) {
+            canvas.classList.add("rounded-lg")
+        }
+
+        onBeforeUnmount(() => window.removeEventListener("resize", handleResize));
+
+        function handleResize() {
+            chart.value.resize();
+        }
+    });
 </script>

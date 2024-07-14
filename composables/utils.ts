@@ -34,6 +34,21 @@ export const strategies = computed<string[]>(() => {
         .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 });
 
+export const cumulativePnl = computed<number[]>(() => {
+    const trades = useTrades();
+    const sortedTrades = trades.value.sort((a: Trade, b: Trade) => a.open.getTime() - b.open.getTime());
+    const pnlValues = sortedTrades.map(trade => trade.pnl);
+
+    return pnlValues.reduce((acc: number[], pnl) => {
+        if (acc.length === 0) {
+            acc.push(pnl);
+        } else {
+            acc.push(acc[acc.length - 1] + pnl);
+        }
+        return acc;
+    }, []);
+});
+
 export function isTag(obj: any): obj is Tag {
     return obj &&
         typeof obj === "object" &&
