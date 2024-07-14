@@ -248,7 +248,7 @@
     const isSlideoverOpen = ref<boolean>(false);
     const previewedTrade = ref<Trade | null>(null);
 
-    const sort = ref({
+    const sort = ref<{ column: keyof Trade; direction: "asc" | "desc" }>({
         column: "open",
         direction: "desc",
     });
@@ -285,7 +285,10 @@
         }
     }));
 
-    const rows = computed<Trade[]>(() => trades.value.slice((page.value - 1) * tradesPerPage, page.value * tradesPerPage));
+    const rows = computed<Trade[]>(() => {
+        const { column, direction } = sort.value;
+        return useOrderBy(trades.value, column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
+    });
 
     const winTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl > 0));
     const loseTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl < 0));
