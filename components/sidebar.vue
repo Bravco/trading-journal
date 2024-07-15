@@ -13,7 +13,7 @@
             <UDropdown class="w-full" mode="hover" :items="userItems">
                 <UButton class="w-full" label="John Doe" variant="ghost" color="gray">
                     <template #leading>
-                        <UAvatar src="https://avatars.githubusercontent.com/u/739984?v=4" size="xs"/>
+                        <UAvatar size="xs"/>
                     </template>
                     <template #trailing>
                         <UIcon class="w-5 h-5 ml-auto" name="i-heroicons-ellipsis-vertical"/>

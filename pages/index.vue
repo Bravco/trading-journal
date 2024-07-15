@@ -194,6 +194,10 @@
 </template>
 
 <script setup lang="ts">
+    definePageMeta({
+        layout: "app",
+    });
+
     const clipboard = useCopyToClipboard();
     const toast = useToast();
     const trades = useTrades();
