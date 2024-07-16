@@ -31,6 +31,10 @@
 </template>
 
 <script lang="ts" setup>
+    import { signOut } from "firebase/auth";
+
+    const auth = useFirebaseAuth()!;
+
     const tradingAccountsItems = [
         [
             { label:"Fusion Markets" },
@@ -50,6 +54,11 @@
 
     const userItems = [
         [{ label:"johndoe@example.com", slot:"account", disabled:true }],
-        [{ label:"Sign out", icon:"i-heroicons-arrow-left-on-rectangle", iconClass: "order-1 ml-auto" }],
+        [{
+            label:"Sign out",
+            icon:"i-heroicons-arrow-right-on-rectangle",
+            iconClass: "order-1 ml-auto",
+            click: () => signOut(auth),
+        }],
     ];
 </script>

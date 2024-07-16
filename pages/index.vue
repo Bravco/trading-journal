@@ -194,9 +194,7 @@
 </template>
 
 <script setup lang="ts">
-    definePageMeta({
-        layout: "app",
-    });
+    definePageMeta({ layout: "app" });
 
     const clipboard = useCopyToClipboard();
     const toast = useToast();

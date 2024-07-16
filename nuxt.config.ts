@@ -5,6 +5,9 @@ export default defineNuxtConfig({
   colorMode: {
     preference: "dark",
   },
+  ui: {
+    icons: ["heroicons", "logos", "eos-icons"],
+  },
   echarts: {
     charts: ["LineChart"],
     components: ["GridComponent"],

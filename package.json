@@ -1,6 +1,8 @@
 {
   "name": "nuxt-app",
   "devDependencies": {
+    "@iconify-json/eos-icons": "^1.1.10",
+    "@iconify-json/logos": "^1.1.43",
     "@nuxt/devtools": "latest",
     "@nuxt/image": "latest",
     "@nuxt/ui": "^2.17.0",
