@@ -11,9 +11,9 @@
         <div class="mt-auto p-4">
             <UDivider class="py-4"/>
             <UDropdown class="w-full" mode="hover" :items="userItems">
-                <UButton class="w-full" label="John Doe" variant="ghost" color="gray">
+                <UButton class="w-full" :label="user?.displayName ?? user?.email" variant="ghost" color="gray">
                     <template #leading>
-                        <UAvatar size="xs"/>
+                        <UAvatar :src="user?.photoURL" size="xs"/>
                     </template>
                     <template #trailing>
                         <UIcon class="w-5 h-5 ml-auto" name="i-heroicons-ellipsis-vertical"/>
@@ -34,6 +34,7 @@
     import { signOut } from "firebase/auth";
 
     const auth = useFirebaseAuth()!;
+    const user = useCurrentUser();
 
     const tradingAccountsItems = [
         [
@@ -53,7 +54,7 @@
     ];
 
     const userItems = [
-        [{ label:"johndoe@example.com", slot:"account", disabled:true }],
+        [{ label: user.value?.email, slot: "account", disabled: true }],
         [{
             label:"Sign out",
             icon:"i-heroicons-arrow-right-on-rectangle",
