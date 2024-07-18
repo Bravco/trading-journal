@@ -28,17 +28,19 @@
                 <UButton @click="toggleSigningUp" label="Don't have an account?" variant="link" color="gray" :padded="false" block/>
             </UForm>
             <UDivider class="my-4" label="OR"/>
-            <UButton label="Sign in with Google" icon="i-logos-google-icon" color="black" block/>
+            <UButton @click="googleSignIn" label="Sign in with Google" icon="i-logos-google-icon" color="black" block/>
         </UCard>
     </div>
 </template>
 
 <script lang="ts" setup>
     import { object, string } from "yup";
-    import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+    import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from "firebase/auth";
 
     const auth = useFirebaseAuth()!;
     const toast = useToast();
+
+    const googleAuthProvider = new GoogleAuthProvider();
 
     const signingUp = ref<boolean>(false);
     const loading = ref<boolean>(false);
@@ -70,6 +72,13 @@
         password: undefined,
     });
 
+    onMounted(async () => {
+        const user = await getCurrentUser();
+        if (user) {
+            navigateTo("/");
+        }
+    });
+
     function toggleSigningUp() {
         if (!loading.value) {
             signingUp.value = !signingUp.value;
@@ -78,8 +87,10 @@
 
     async function signUp() {
         loading.value = true;
-        createUserWithEmailAndPassword(auth, signUpState.email, signUpState.password).then(() => {
+        createUserWithEmailAndPassword(auth, signUpState.email, signUpState.password).then((userCredential) => {
             loading.value = false;
+            sendEmailVerification(userCredential.user);
+            toast.add({ title: "Verification email was sent to your email address", icon: "i-heroicons-information-circle", color: "green", })
         }).catch(error => {
             let message = "Something went wrong";
             loading.value = false;
@@ -100,12 +111,11 @@
     
     async function signIn() {
         loading.value = true;
+
         signInWithEmailAndPassword(auth, signInState.email, signInState.password).then(() => {
-            navigateTo("/");
             loading.value = false;
         }).catch(error => {
             let message = "Something went wrong";
-            loading.value = false;
             
             switch (error.code) {
                 case "auth/invalid-credential":
@@ -118,13 +128,18 @@
             }
 
             toast.add({ title: message, icon: "i-heroicons-exclamation-triangle", color: "red" });
+            loading.value = false;
         });
     }
 
-    onMounted(async () => {
-        const user = await getCurrentUser();
-        if (user) {
-            navigateTo("/");
-        }
-    });
+    async function googleSignIn() {
+        loading.value = true;
+
+        signInWithPopup(auth, googleAuthProvider).then(() => {
+            loading.value = false;
+        }).catch(() => {
+            toast.add({ title: "Something went wrong", icon: "i-heroicons-exclamation-triangle", color: "red" });
+            loading.value = false;
+        });
+    }
 </script>

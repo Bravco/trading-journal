@@ -150,7 +150,7 @@
                             @click="() => {
                                 if (previewedTrade) {
                                     clipboard.copy(previewedTrade.imageUrl);
-                                    toast.add({ title: 'Copied to clipboard' });
+                                    toast.add({ title: 'Copied to clipboard', icon: 'i-heroicons-clipboard-document' });
                                 }
                             }" 
                             icon="i-heroicons-clipboard-document" 
