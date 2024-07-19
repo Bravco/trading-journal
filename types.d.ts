@@ -6,10 +6,11 @@ type Tag = {
 type Trade = {
     open: Date,
     symbol: string,
-    strategy: string,
-    risk: number,
-    rr: number,
-    pnl: number,
-    imageUrl: string,
+    risk?: number | null,
+    rr?: number | null,
+    pnl?: number | null,
+    imageUrl?: string | null,
+    strategy?: string | null,
+    note?: string | null,
     tags: Tag[],
 };

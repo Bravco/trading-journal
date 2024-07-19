@@ -13,6 +13,7 @@ export const useTrades = () => useState<Trade[]>("trades", () => [
             { label: "Liquidity Sweep", color: "orange" },
             { label: "Inverse Fair Value Gap", color: "yellow" },
         ],
+        note: "I felt",
     },
     {
         open: new Date("2024-07-05T15:35:00"),

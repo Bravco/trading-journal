@@ -29,14 +29,14 @@
         </Sidebar>
     </USlideover>
     <USlideover v-model="isTradeSlideoverOpen" :ui="{ width: 'max-w-xl' }">
-        <UCard class="h-full" :ui="{ rounded: 'rounded-none' }">
+        <UCard class="h-full overflow-y-auto" :ui="{ rounded: 'rounded-none' }">
             <template #header>
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-2">
                         <UIcon name="i-heroicons-document-plus"/>
                         <h1 class="text-lg font-medium">{{ editedTrade === null ? "New Trade" : "Edit Trade" }}</h1>
                     </div>
-                    <UButton @click="closeSlideover" icon="i-heroicons-x-mark" variant="ghost" color="gray"/>
+                    <UButton @click="isTradeSlideoverOpen = false" icon="i-heroicons-x-mark" variant="ghost" color="gray"/>
                 </div>
             </template>
             <UForm @submit="onSubmit" @keydown.enter="$event.preventDefault()" :schema="schema" :state="state" class="space-y-4">
@@ -49,21 +49,21 @@
                     </UFormGroup>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <UFormGroup label="Risk Reward" name="rr" required>
+                    <UFormGroup label="Risk Reward" name="rr">
                         <UInput v-model="state.rr" type="decimal" min="0"/>
                     </UFormGroup>
-                    <UFormGroup label="Original Risk" name="risk" required>
+                    <UFormGroup label="Original Risk" name="risk">
                         <UInput v-model="state.risk" type="decimal" min="0"/>
                     </UFormGroup>
-                    <UFormGroup label="Net P&L" name="pnl" required>
+                    <UFormGroup label="Net P&L" name="pnl">
                         <UInput v-model="state.pnl" type="decimal"/>
                     </UFormGroup>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <UFormGroup label="Image Url" name="imageUrl" required>
+                    <UFormGroup label="Image Url" name="imageUrl">
                         <UInput v-model="state.imageUrl" type="text"/>
                     </UFormGroup>
-                    <UFormGroup label="Strategy" name="strategy" required>
+                    <UFormGroup label="Strategy" name="strategy">
                         <UInput v-model="state.strategy" type="text">
                             <template #trailing>
                                 <UDropdown :items="strategyOptions" class="pointer-events-auto">
@@ -73,6 +73,16 @@
                         </UInput>
                     </UFormGroup>
                 </div>
+                <UFormGroup label="Note" name="note">
+                    <UTextarea
+                        @keydown.enter="() => state.note = state.note + '\n'" 
+                        v-model="state.note" 
+                        maxlength="500"
+                        :maxrows="5"
+                        autoresize 
+                    />
+                    <span class="text-xs">{{ state.note ? state.note.length : 0 }} / 500</span>
+                </UFormGroup>
                 <UFormGroup label="Tags" name="tags">
                     <div class="flex items-center justify-between gap-2">
                         <UInput @keydown.enter="pushNewTag" v-model="state.tagLabel" type="text" class="w-full">
@@ -122,15 +132,16 @@
 
     const trades = useTrades();
     const editedTrade = useEditedTrade();
-
+    
     const schema = object({
         open: date().required("Open Date is required"),
         symbol: string().required("Symbol is required"),
-        strategy: string().required("Strategy is required"),
-        risk: number().positive("Original Risk must be a positive number").required("Original Risk is required"),
-        rr: number().positive("Risk Reward must be a positive number").required("Risk Reward is required"),
-        pnl: number().required("Net P&L is required"),
-        imageUrl: string().url("Image Url must be a valid URL").required("Image Url is required"),
+        strategy: string(),
+        risk: number().positive("Original Risk must be a positive number"),
+        rr: number().positive("Risk Reward must be a positive number"),
+        pnl: number(),
+        imageUrl: string().url("Image Url must be a valid URL"),
+        note: string(),
         tagLabel: string(),
         tagColor: string(),
         tags: array(),
@@ -139,11 +150,12 @@
     const initialState: any = {
         open: undefined,
         symbol: undefined,
-        strategy: undefined,
         risk: undefined,
         rr: undefined,
         pnl: undefined,
         imageUrl: undefined,
+        strategy: undefined,
+        note: undefined,
         tagLabel: undefined,
         tagColor: undefined,
         tags: [],
@@ -184,7 +196,10 @@
         }
 
         if (editedTrade.value === null) {
-            state.open = formatOpenDate(new Date());
+            Object.assign(state, {
+                ...initialState,
+                open: formatOpenDate(new Date()),
+            });
         } else {
             Object.assign(state, {
                 ...initialState,
@@ -194,13 +209,6 @@
         }
 
         isTradeSlideoverOpen.value = true;
-    }
-
-    function closeSlideover() {
-        Object.assign(state, initialState);
-        state.tags = [];
-        editedTrade.value = null;
-        isTradeSlideoverOpen.value = false;
     }
 
     function pushNewTag() {
@@ -218,11 +226,12 @@
         const newTrade: Trade = {
             open: new Date(state.open),
             symbol: state.symbol,
-            strategy: state.strategy,
-            risk: parseFloat(state.risk),
-            rr: parseFloat(state.rr),
-            pnl: parseFloat(state.pnl),
+            risk: state.risk ? parseFloat(state.risk) : undefined,
+            rr: state.rr ? parseFloat(state.rr) : undefined,
+            pnl: state.pnl ? parseFloat(state.pnl) : undefined,
             imageUrl: state.imageUrl,
+            strategy: state.strategy,
+            note: state.note,
             tags: state.tags ?? [],
         };
 
@@ -236,8 +245,14 @@
             }
         }
         
-        closeSlideover();
+        isTradeSlideoverOpen.value = false;
     }
+
+    watch(isTradeSlideoverOpen, () => {
+        if (isTradeSlideoverOpen.value === false) {
+            editedTrade.value = null;
+        } 
+    });
 
     watch(editedTrade, () => {
         if (editedTrade.value !== null) {

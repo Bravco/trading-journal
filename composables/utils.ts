@@ -30,8 +30,9 @@ export const tags = computed<Tag[]>(() => {
 export const strategies = computed<string[]>(() => {
     const trades = useTrades();
 
-    return Array.from(new Set(trades.value.flatMap(trade => trade.strategy)))
-        .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+    return Array.from(new Set(
+        trades.value.flatMap(trade => trade.strategy).filter((strategy): strategy is string => strategy !== null)
+    )).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 });
 
 export const cumulativePnl = computed<number[]>(() => {
@@ -40,10 +41,12 @@ export const cumulativePnl = computed<number[]>(() => {
     const pnlValues = sortedTrades.map(trade => trade.pnl);
 
     return pnlValues.reduce((acc: number[], pnl) => {
-        if (acc.length === 0) {
-            acc.push(pnl);
-        } else {
-            acc.push(acc[acc.length - 1] + pnl);
+        if (pnl) {
+            if (acc.length === 0) {
+                acc.push(pnl);
+            } else {
+                acc.push(acc[acc.length - 1] + pnl);
+            }
         }
         return acc;
     }, []);

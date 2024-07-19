@@ -101,18 +101,21 @@
                         <span class="font-medium">{{ row.symbol }}</span>
                     </template>
                     <template #strategy-data="{ row }">
-                        <UBadge :label="row.strategy" variant="subtle"/>
+                        <UBadge v-if="row.strategy" :label="row.strategy" variant="subtle"/>
                     </template>
                     <template #rr-data="{ row }">
-                        <span>{{ row.rr.toFixed(2) }}</span>
+                        <span v-if="row.rr">{{ row.rr.toFixed(2) }}</span>
+                        <span v-else/>
                     </template>
                     <template #risk-data="{ row }">
-                        <span>{{ `${row.risk.toFixed(2)} €` }}</span>
+                        <span v-if="row.risk">{{ `${row.risk.toFixed(2)} €` }}</span>
+                        <span v-else/>
                     </template>
                     <template #pnl-data="{ row }">
-                        <span :class="['font-medium', { 'text-green-500': row.pnl > 0 }, { 'text-red-500': row.pnl < 0 }]">
+                        <span v-if="row.pnl" :class="['font-medium', { 'text-green-500': row.pnl > 0 }, { 'text-red-500': row.pnl < 0 }]">
                             {{ `${row.pnl >= 0 ? "+" : ""}${row.pnl.toFixed(2)} €` }}
                         </span>
+                        <span v-else/>
                     </template>
                     <template #status-data="{ row }">
                         <UBadge v-if="row.pnl > 0" label="Win" variant="subtle" color="green"/>
@@ -131,7 +134,7 @@
             </UCard>
         </div>
         <USlideover v-model="isSlideoverOpen" :ui="{ width: 'max-w-xl' }">
-            <UCard class="h-full" :ui="{ rounded: 'rounded-none' }">
+            <UCard class="h-full overflow-y-auto" :ui="{ rounded: 'rounded-none' }">
                 <template #header>
                     <div class="flex justify-between items-center">
                         <div class="flex items-center gap-2">
@@ -142,13 +145,13 @@
                     </div>
                 </template>
                 <div v-if="previewedTrade" class="flex flex-col gap-4">
-                    <ULink :to="previewedTrade.imageUrl" target="_blank" class="cursor-pointer hover:opacity-50 transition">
+                    <ULink v-if="previewedTrade.imageUrl" :to="previewedTrade.imageUrl" target="_blank" class="cursor-pointer hover:opacity-50 transition">
                         <NuxtImg :src="previewedTrade.imageUrl"/>
                     </ULink>
-                    <div class="flex flex-col">
+                    <div v-if="previewedTrade.imageUrl" class="flex flex-col">
                         <UButton 
                             @click="() => {
-                                if (previewedTrade) {
+                                if (previewedTrade && previewedTrade.imageUrl) {
                                     clipboard.copy(previewedTrade.imageUrl);
                                     toast.add({ title: 'Copied to clipboard', icon: 'i-heroicons-clipboard-document' });
                                 }
@@ -163,21 +166,29 @@
                         <span class="text-sm">{{ `${previewedTrade.open.toDateString()} ${previewedTrade.open.toLocaleTimeString([], { timeStyle: "short" })}` }}</span>
                         <div class="flex items-center gap-2">
                             <h2 class="font-medium text-xl">{{ previewedTrade.symbol }}</h2>
-                            <UBadge v-if="previewedTrade.pnl > 0" label="Win" variant="subtle" color="green"/>
-                            <UBadge v-if="previewedTrade.pnl < 0" label="Lose" variant="subtle" color="red"/>
-                            <UBadge v-if="previewedTrade.pnl === 0" label="Breakeven" variant="subtle" color="blue"/>
+                            <div v-if="previewedTrade.pnl">
+                                <UBadge v-if="previewedTrade.pnl > 0" label="Win" variant="subtle" color="green"/>
+                                <UBadge v-if="previewedTrade.pnl < 0" label="Lose" variant="subtle" color="red"/>
+                                <UBadge v-if="previewedTrade.pnl === 0" label="Breakeven" variant="subtle" color="blue"/>
+                            </div>
                         </div>
                     </div>
                     <div class="flex flex-col gap-1">
-                        <span>Risk Reward: <span class="font-medium">{{ previewedTrade.rr.toFixed(2) }}</span></span>
-                        <span>Original Risk: <span class="font-medium text-red-500">{{ `${previewedTrade.risk.toFixed(2)} €` }}</span></span>
-                        <span>Net P&L: <span :class="['font-medium', 'text-green-500', { 'text-green-500': previewedTrade.pnl > 0 }, { 'text-red-500': previewedTrade.pnl < 0 }]">
-                            {{ `${previewedTrade.pnl >= 0 ? "+" : ""}${previewedTrade.pnl.toFixed(2)} €` }}
-                        </span></span>
+                        <span v-if="previewedTrade.rr">Risk Reward: <span class="font-medium">{{ previewedTrade.rr.toFixed(2) }}</span></span>
+                        <span v-if="previewedTrade.risk">Original Risk: <span class="font-medium text-red-500">{{ `${previewedTrade.risk.toFixed(2)} €` }}</span></span>
+                        <span v-if="previewedTrade.pnl">
+                            Net P&L: <span :class="['font-medium', 'text-green-500', { 'text-green-500': previewedTrade.pnl > 0 }, { 'text-red-500': previewedTrade.pnl < 0 }]">
+                                {{ `${previewedTrade.pnl >= 0 ? "+" : ""}${previewedTrade.pnl.toFixed(2)} €` }}
+                            </span>
+                        </span>
+                    </div>
+                    <div v-if="previewedTrade.note">
+                        <h3 class="mb-2 font-medium text-lg">Note</h3>
+                        <pre class="font-sans">{{ previewedTrade.note }}</pre>
                     </div>
                 </div>
-                <template v-if="previewedTrade" #footer>
-                    <div class="mb-4">
+                <template v-if="previewedTrade && previewedTrade.strategy && previewedTrade.tags.length > 0" #footer>
+                    <div v-if="previewedTrade.strategy" class="mb-4">
                         <h3 class="mb-2 font-medium text-lg">Strategy</h3>
                         <UBadge :label="previewedTrade.strategy" variant="subtle"/>
                     </div>
@@ -292,21 +303,21 @@
         return useOrderBy(trades.value, column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
     });
 
-    const winTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl > 0));
-    const loseTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl < 0));
+    const winTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl && trade.pnl > 0));
+    const loseTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl && trade.pnl < 0));
     const breakevenTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl === 0));
 
-    const grossProfit = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0));
-    const grossLoss = computed<number>(() => loseTrades.value.reduce((acc, trade) => acc + Math.abs(trade.pnl), 0));
+    const grossProfit = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0));
+    const grossLoss = computed<number>(() => loseTrades.value.reduce((acc, trade) => acc + Math.abs(trade.pnl ?? 0), 0));
 
-    const totalPnl = computed<number>(() => trades.value.reduce((acc, trade) => acc + trade.pnl, 0));
+    const totalPnl = computed<number>(() => trades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0));
     const winRate = computed<number>(() => (winTrades.value.length / trades.value.length) * 100);
     const breakevenRate = computed<number>(() => (breakevenTrades.value.length / trades.value.length) * 100);
     const profitFactor = computed<number>(() => grossProfit.value / grossLoss.value);
 
-    const avgWin = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / winTrades.value.length);
+    const avgWin = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0) / winTrades.value.length);
     const avgLose = computed<number>(() => {
-        const value = loseTrades.value.reduce((acc, trade) => acc + trade.pnl, 0) / loseTrades.value.length;
+        const value = loseTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0) / loseTrades.value.length;
         if (value) {
             return value;
         } else {
