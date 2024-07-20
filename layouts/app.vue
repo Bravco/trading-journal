@@ -109,11 +109,13 @@
                         <UBadge 
                             v-for="tag in state.tags" 
                             @click="state.tags = state.tags.filter((t: Tag) => t !== tag)" 
-                            :label="tag.label" 
                             :color="tag.color" 
                             variant="subtle" 
-                            class="h-fit cursor-pointer"
-                        />
+                            class="h-fit flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                            <span>{{ tag.label }}</span>
+                            <UIcon class="mt-px" name="i-heroicons-x-mark"/>
+                        </UBadge>
                     </div>
                 </UFormGroup>
                 <UDivider/>
