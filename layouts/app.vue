@@ -132,7 +132,8 @@
 <script lang="ts" setup>
     import { object, string, number, date, array } from "yup";
 
-    const trades = useTrades();
+    const accounts = useAccounts();
+    const selectedAccountId = useSelectedAccountId();
     const editedTrade = useEditedTrade();
     
     const schema = object({
@@ -238,12 +239,12 @@
         };
 
         if (editedTrade.value === null) {
-            trades.value.push(newTrade);
+            accounts.value[selectedAccountId.value].trades.push(newTrade);
         } else {
-            const index = useFindIndex(trades.value, trade => isEqual(trade, editedTrade.value));
+            const index = useFindIndex(accounts.value[selectedAccountId.value].trades, trade => isEqual(trade, editedTrade.value));
             
             if (index !== -1) {
-                trades.value[index] = newTrade;
+                accounts.value[selectedAccountId.value].trades[index] = newTrade;
             }
         }
         

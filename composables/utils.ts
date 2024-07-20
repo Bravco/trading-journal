@@ -20,24 +20,27 @@ export const colors: string[] = [
 ];
 
 export const tags = computed<Tag[]>(() => {
-    const trades = useTrades();
+    const accounts = useAccounts();
+    const selectedAccountId = useSelectedAccountId();
 
-    return Array.from(new Set(trades.value.flatMap(trade => trade.tags.map(tag => JSON.stringify(tag)))))
+    return Array.from(new Set(accounts.value[selectedAccountId.value].trades.flatMap(trade => trade.tags.map(tag => JSON.stringify(tag)))))
         .map(tagStr => JSON.parse(tagStr))
         .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
 });
 
 export const strategies = computed<string[]>(() => {
-    const trades = useTrades();
+    const accounts = useAccounts();
+    const selectedAccountId = useSelectedAccountId();
 
     return Array.from(new Set(
-        trades.value.flatMap(trade => trade.strategy).filter((strategy): strategy is string => strategy !== null)
+        accounts.value[selectedAccountId.value].trades.flatMap(trade => trade.strategy).filter((strategy): strategy is string => strategy !== null)
     )).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 });
 
 export const cumulativePnl = computed<number[]>(() => {
-    const trades = useTrades();
-    const sortedTrades = trades.value.sort((a: Trade, b: Trade) => a.open.getTime() - b.open.getTime());
+    const accounts = useAccounts();
+    const selectedAccountId = useSelectedAccountId();
+    const sortedTrades = accounts.value[selectedAccountId.value].trades.sort((a: Trade, b: Trade) => a.open.getTime() - b.open.getTime());
     const pnlValues = sortedTrades.map(trade => trade.pnl);
 
     return pnlValues.reduce((acc: number[], pnl) => {

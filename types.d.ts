@@ -1,6 +1,6 @@
-type Tag = {
-    label: string,
-    color: string,
+type Account = {
+    title: string,
+    trades: Trade[],
 };
 
 type Trade = {
@@ -13,4 +13,9 @@ type Trade = {
     strategy?: string | null,
     note?: string | null,
     tags: Tag[],
+};
+
+type Tag = {
+    label: string,
+    color: string,
 };

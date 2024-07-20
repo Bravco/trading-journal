@@ -28,12 +28,12 @@
                                 </UTooltip>
                             </div>
                             <UTooltip text="Total number of trades">
-                                <UBadge :label="trades.length" variant="solid" color="gray"/>
+                                <UBadge :label="accounts[selectedAccountId].trades.length" variant="solid" color="gray"/>
                             </UTooltip>
                         </div>
                     </template>
                     <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
-                        <span class="text-2xl font-bold">{{ `${winRate.toFixed(2)}%` }}</span>
+                        <span class="text-2xl font-bold">{{ `${Number.isNaN(winRate) ? 0 : winRate.toFixed(2)}%` }}</span>
                         <div class="flex gap-4">
                             <RadialProgress :progress-primary="winRate" :progress-secondary="breakevenRate"/>
                             <div class="flex flex-col justify-center items-center gap-2">
@@ -62,13 +62,14 @@
                         </div>
                     </template>
                     <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
-                        <span class="text-2xl font-bold">{{ profitFactor.toFixed(2) }}</span>
+                        <span class="text-2xl font-bold">{{ Number.isNaN(profitFactor) ? 0 : profitFactor.toFixed(2) }}</span>
                         <UBadge v-if="profitFactor <= 1" label="Bad" variant="subtle" size="lg" color="red"/>
                         <UBadge v-else-if="profitFactor <= 1.5" label="Poor" variant="subtle" size="lg" color="red"/>
                         <UBadge v-else-if="profitFactor <= 2" label="Average" variant="subtle" size="lg" color="orange"/>
                         <UBadge v-else-if="profitFactor <= 3" label="Good" variant="subtle" size="lg" color="green"/>
                         <UBadge v-else-if="profitFactor <= 4" label="Great" variant="subtle" size="lg" color="green"/>
-                        <UBadge v-else label="Excellent" variant="subtle" size="lg" color="green"/>
+                        <UBadge v-else-if="profitFactor > 4" label="Excellent" variant="subtle" size="lg" color="green"/>
+                        <UBadge v-else label="None" variant="subtle" size="lg" color="gray"/>
                     </div>
                 </UCard>
                 <UCard>
@@ -81,12 +82,17 @@
                         </div>
                     </template>
                     <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
-                        <span class="text-2xl font-bold">{{ realRr.toFixed(2) }}</span>
+                        <span class="text-2xl font-bold">{{ Number.isNaN(realRr) ? 0 : realRr.toFixed(2) }}</span>
                         <div class="w-full flex flex-col gap-1">
-                            <UProgress :value="avgWin" :max="avgWin + Math.abs(avgLose)" color="green" :ui="{ progress: { track: '[&::-webkit-progress-bar]:bg-red-500 [&::-webkit-progress-bar]:dark:bg-red-500 [@supports(selector(&::-moz-progress-bar))]:bg-red-500 [@supports(selector(&::-moz-progress-bar))]:dark:bg-red-500' } }"/>
+                            <UProgress 
+                                :value="Number.isNaN(avgWin) ? 0.5 : avgWin" 
+                                :max="(Number.isNaN(avgWin) ? 0 : avgWin) + Math.abs(avgLose)" 
+                                color="green" 
+                                :ui="{ progress: { track: '[&::-webkit-progress-bar]:bg-red-500 [&::-webkit-progress-bar]:dark:bg-red-500 [@supports(selector(&::-moz-progress-bar))]:bg-red-500 [@supports(selector(&::-moz-progress-bar))]:dark:bg-red-500' } }"
+                            />
                             <div class="flex justify-between items-center">
-                                <span class="font-medium text-green-500">{{ `+${avgWin.toFixed(2)} €` }}</span>
-                                <span class="font-medium text-red-500">{{ `${avgLose.toFixed(2)} €` }}</span>
+                                <span class="font-medium text-green-500">{{ `+${Number.isNaN(avgWin) ? (0).toFixed(2) : avgWin.toFixed(2)} €` }}</span>
+                                <span class="font-medium text-red-500">{{ `-${Math.abs(avgLose).toFixed(2)} €` }}</span>
                             </div>
                         </div>
                     </div>
@@ -104,15 +110,15 @@
                         <UBadge v-if="row.strategy" :label="row.strategy" variant="subtle"/>
                     </template>
                     <template #rr-data="{ row }">
-                        <span v-if="row.rr">{{ row.rr.toFixed(2) }}</span>
+                        <span v-if="row.rr !== undefined && row.rr !== null">{{ row.rr.toFixed(2) }}</span>
                         <span v-else/>
                     </template>
                     <template #risk-data="{ row }">
-                        <span v-if="row.risk">{{ `${row.risk.toFixed(2)} €` }}</span>
+                        <span v-if="row.risk !== undefined && row.risk !== null">{{ `${row.risk.toFixed(2)} €` }}</span>
                         <span v-else/>
                     </template>
                     <template #pnl-data="{ row }">
-                        <span v-if="row.pnl" :class="['font-medium', { 'text-green-500': row.pnl > 0 }, { 'text-red-500': row.pnl < 0 }]">
+                        <span v-if="row.pnl !== undefined && row.pnl !== null" :class="['font-medium', { 'text-green-500': row.pnl > 0 }, { 'text-red-500': row.pnl < 0 }]">
                             {{ `${row.pnl >= 0 ? "+" : ""}${row.pnl.toFixed(2)} €` }}
                         </span>
                         <span v-else/>
@@ -129,7 +135,7 @@
                     </template>
                 </UTable>
                 <div class="flex justify-center sm:justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
-                    <UPagination v-model="page" :page-count="tradesPerPage" :total="trades.length" :max="3"/>
+                    <UPagination v-model="page" :page-count="tradesPerPage" :total="accounts[selectedAccountId].trades.length" :max="3"/>
                 </div>
             </UCard>
         </div>
@@ -209,7 +215,8 @@
 
     const clipboard = useCopyToClipboard();
     const toast = useToast();
-    const trades = useTrades();
+    const accounts = useAccounts();
+    const selectedAccountId = useSelectedAccountId();
     const editedTrade = useEditedTrade();
 
     const columns = [
@@ -243,14 +250,14 @@
             {
                 label: "Duplicate",
                 icon: "i-heroicons-document-duplicate",
-                click: () => trades.value.push(trade),
+                click: () => accounts.value[selectedAccountId.value].trades.push(trade),
             },
         ],
         [
             {
                 label: "Delete",
                 icon: "i-heroicons-trash",
-                click: () => trades.value = trades.value.filter(t => t !== trade),
+                click: () => accounts.value[selectedAccountId.value].trades = accounts.value[selectedAccountId.value].trades.filter(t => t !== trade),
             },
         ],
     ];
@@ -300,19 +307,19 @@
 
     const rows = computed<Trade[]>(() => {
         const { column, direction } = sort.value;
-        return useOrderBy(trades.value, column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
+        return useOrderBy(accounts.value[selectedAccountId.value].trades, column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
     });
 
-    const winTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl && trade.pnl > 0));
-    const loseTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl && trade.pnl < 0));
-    const breakevenTrades = computed<Trade[]>(() => trades.value.filter(trade => trade.pnl === 0));
+    const winTrades = computed<Trade[]>(() => accounts.value[selectedAccountId.value].trades.filter(trade => trade.pnl && trade.pnl > 0));
+    const loseTrades = computed<Trade[]>(() => accounts.value[selectedAccountId.value].trades.filter(trade => trade.pnl && trade.pnl < 0));
+    const breakevenTrades = computed<Trade[]>(() => accounts.value[selectedAccountId.value].trades.filter(trade => trade.pnl === 0));
 
     const grossProfit = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0));
     const grossLoss = computed<number>(() => loseTrades.value.reduce((acc, trade) => acc + Math.abs(trade.pnl ?? 0), 0));
 
-    const totalPnl = computed<number>(() => trades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0));
-    const winRate = computed<number>(() => (winTrades.value.length / trades.value.length) * 100);
-    const breakevenRate = computed<number>(() => (breakevenTrades.value.length / trades.value.length) * 100);
+    const totalPnl = computed<number>(() => accounts.value[selectedAccountId.value].trades.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0));
+    const winRate = computed<number>(() => (winTrades.value.length / accounts.value[selectedAccountId.value].trades.length) * 100);
+    const breakevenRate = computed<number>(() => (breakevenTrades.value.length / accounts.value[selectedAccountId.value].trades.length) * 100);
     const profitFactor = computed<number>(() => grossProfit.value / grossLoss.value);
 
     const avgWin = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0) / winTrades.value.length);
