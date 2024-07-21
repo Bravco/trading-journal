@@ -62,6 +62,14 @@
                     <UButton @click="isManageAccountsModalOpen = false" icon="i-heroicons-x-mark" variant="ghost" color="gray"/>
                 </div>
             </template>
+            <UForm @submit="" class="space-y-4">
+                <div v-for="account in accounts" class="flex gap-2">
+                    <UInput v-model="account.title" class="w-full" type="text"/>
+                    <UButton icon="i-heroicons-trash" color="red"/>
+                </div>
+                <UDivider/>
+                <UButton type="submit" label="Save" icon="i-heroicons-check"/>
+            </UForm>
         </UCard>
     </UModal>
 </template>

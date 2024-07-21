@@ -1,7 +1,7 @@
 <template>
     <div class="fixed inset-0 flex overflow-auto">
         <aside class="min-w-64 hidden lg:block"><Sidebar/></aside>
-        <div class="w-full grid">
+        <div class="w-full">
             <header>
                 <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-800">
                     <div class="flex items-stretch gap-2">
