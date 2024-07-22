@@ -27,7 +27,7 @@
                             </UTooltip>
                         </div>
                         <UTooltip text="Total number of trades">
-                            <UBadge :label="accounts[selectedAccountId].trades.length" variant="solid" color="gray"/>
+                            <UBadge :label="accounts[selectedAccountId]?.trades.length ?? 0" variant="solid" color="gray"/>
                         </UTooltip>
                     </div>
                 </template>
@@ -134,7 +134,7 @@
                 </template>
             </UTable>
             <div class="flex justify-center sm:justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
-                <UPagination v-model="page" :page-count="tradesPerPage" :total="accounts[selectedAccountId].trades.length" :max="3"/>
+                <UPagination v-model="page" :page-count="tradesPerPage" :total="accounts[selectedAccountId]?.trades.length ?? 0" :max="3"/>
             </div>
         </UCard>
     </div>
@@ -248,14 +248,19 @@
             {
                 label: "Duplicate",
                 icon: "i-heroicons-document-duplicate",
-                click: () => accounts.value[selectedAccountId.value].trades.push(trade),
+                click: () => accounts.value[selectedAccountId.value]?.trades.push(trade),
             },
         ],
         [
             {
                 label: "Delete",
                 icon: "i-heroicons-trash",
-                click: () => accounts.value[selectedAccountId.value].trades = accounts.value[selectedAccountId.value].trades.filter(t => t !== trade),
+                click: () => {
+                    if (accounts.value[selectedAccountId.value]) {
+                        accounts.value[selectedAccountId.value].trades = 
+                            accounts.value[selectedAccountId.value].trades.filter(t => t !== trade);
+                    }
+                },
             },
         ],
     ];
@@ -305,19 +310,23 @@
 
     const rows = computed<Trade[]>(() => {
         const { column, direction } = sort.value;
-        return useOrderBy(accounts.value[selectedAccountId.value].trades, column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
+        if (accounts.value[selectedAccountId.value]) {
+            return useOrderBy(accounts.value[selectedAccountId.value].trades, column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
+        } else {
+            return [];
+        }
     });
 
-    const winTrades = computed<Trade[]>(() => accounts.value[selectedAccountId.value].trades.filter(trade => trade.pnl && trade.pnl > 0));
-    const loseTrades = computed<Trade[]>(() => accounts.value[selectedAccountId.value].trades.filter(trade => trade.pnl && trade.pnl < 0));
-    const breakevenTrades = computed<Trade[]>(() => accounts.value[selectedAccountId.value].trades.filter(trade => trade.pnl === 0));
+    const winTrades = computed<Trade[]>(() => accounts.value[selectedAccountId.value]?.trades.filter(trade => trade.pnl && trade.pnl > 0)  ?? []);
+    const loseTrades = computed<Trade[]>(() => accounts.value[selectedAccountId.value]?.trades.filter(trade => trade.pnl && trade.pnl < 0) ?? []);
+    const breakevenTrades = computed<Trade[]>(() => accounts.value[selectedAccountId.value]?.trades.filter(trade => trade.pnl === 0) ?? []);
 
     const grossProfit = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0));
     const grossLoss = computed<number>(() => loseTrades.value.reduce((acc, trade) => acc + Math.abs(trade.pnl ?? 0), 0));
 
-    const totalPnl = computed<number>(() => accounts.value[selectedAccountId.value].trades.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0));
-    const winRate = computed<number>(() => (winTrades.value.length / accounts.value[selectedAccountId.value].trades.length) * 100);
-    const breakevenRate = computed<number>(() => (breakevenTrades.value.length / accounts.value[selectedAccountId.value].trades.length) * 100);
+    const totalPnl = computed<number>(() => accounts.value[selectedAccountId.value]?.trades.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0) ?? 0);
+    const winRate = computed<number>(() => (winTrades.value.length / accounts.value[selectedAccountId.value]?.trades.length) * 100 ?? 0);
+    const breakevenRate = computed<number>(() => (breakevenTrades.value.length / accounts.value[selectedAccountId.value]?.trades.length) * 100 ?? 0);
     const profitFactor = computed<number>(() => grossProfit.value / grossLoss.value);
 
     const avgWin = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0) / winTrades.value.length);

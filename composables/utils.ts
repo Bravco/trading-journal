@@ -23,24 +23,28 @@ export const tags = computed<Tag[]>(() => {
     const accounts = useAccounts();
     const selectedAccountId = useSelectedAccountId();
 
-    return Array.from(new Set(accounts.value[selectedAccountId.value].trades.flatMap(trade => trade.tags.map(tag => JSON.stringify(tag)))))
-        .map(tagStr => JSON.parse(tagStr))
-        .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+    if (accounts.value[selectedAccountId.value]) {
+        return Array.from(new Set(accounts.value[selectedAccountId.value].trades.flatMap(trade => trade.tags.map(tag => JSON.stringify(tag)))))
+            .map(tagStr => JSON.parse(tagStr))
+            .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+    } else return [];
 });
 
 export const strategies = computed<string[]>(() => {
     const accounts = useAccounts();
     const selectedAccountId = useSelectedAccountId();
 
-    return Array.from(new Set(
-        accounts.value[selectedAccountId.value].trades.flatMap(trade => trade.strategy).filter((strategy): strategy is string => strategy !== null)
-    )).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+    if (accounts.value[selectedAccountId.value]) {
+        return Array.from(new Set(
+            accounts.value[selectedAccountId.value].trades.flatMap(trade => trade.strategy).filter((strategy): strategy is string => strategy !== null)
+        )).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+    } else return [];
 });
 
 export const cumulativePnl = computed<number[]>(() => {
     const accounts = useAccounts();
     const selectedAccountId = useSelectedAccountId();
-    const sortedTrades = accounts.value[selectedAccountId.value].trades.sort((a: Trade, b: Trade) => a.open.getTime() - b.open.getTime());
+    const sortedTrades = accounts.value[selectedAccountId.value]?.trades.sort((a: Trade, b: Trade) => a.open.getTime() - b.open.getTime()) ?? [];
     const pnlValues = sortedTrades.map(trade => trade.pnl);
 
     return pnlValues.reduce((acc: number[], pnl) => {

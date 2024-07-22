@@ -1,18 +1,23 @@
 <template>
     <div class="fixed inset-0 flex overflow-auto">
-        <aside class="min-w-64 hidden lg:block"><Sidebar/></aside>
-        <div class="w-full">
+        <aside class="min-w-64 sticky top-0 hidden lg:block"><Sidebar/></aside>
+        <div class="w-full lg:w-[calc(100%-16rem)]">
             <header>
                 <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-800">
                     <div class="flex items-stretch gap-2">
                         <UButton class="lg:hidden" @click="isSidebarSlideoverOpen = true" icon="i-heroicons-bars-3" variant="ghost" color="gray" square/>
                         <h1 class="text-xl font-bold">Trading <span class="text-primary">Journal</span></h1>
                     </div>
-                    <UButton @click="openSlideover" label="New Trade" icon="i-heroicons-document-plus" variant="solid"/>
+                    <UButton 
+                        @click="openSlideover" 
+                        label="New Trade" 
+                        icon="i-heroicons-document-plus" 
+                        :disabled="accounts[selectedAccountId] ? false : true"
+                    />
                 </div>
             </header>
-            <div class="overflow-y-auto p-4">
-                <main>
+            <div>
+                <main class="p-4 overflow-y-auto">
                     <slot/>
                 </main>
                 <footer>
@@ -226,25 +231,27 @@
     }
 
     async function onSubmit() {
-        const newTrade: Trade = {
-            open: new Date(state.open),
-            symbol: state.symbol,
-            risk: state.risk ? parseFloat(state.risk) : undefined,
-            rr: state.rr ? parseFloat(state.rr) : undefined,
-            pnl: state.pnl ? parseFloat(state.pnl) : undefined,
-            imageUrl: state.imageUrl,
-            strategy: state.strategy,
-            note: state.note,
-            tags: state.tags ?? [],
-        };
+        if (accounts.value[selectedAccountId.value]) {
+            const newTrade: Trade = {
+                open: new Date(state.open),
+                symbol: state.symbol,
+                risk: state.risk ? parseFloat(state.risk) : undefined,
+                rr: state.rr ? parseFloat(state.rr) : undefined,
+                pnl: state.pnl ? parseFloat(state.pnl) : undefined,
+                imageUrl: state.imageUrl,
+                strategy: state.strategy,
+                note: state.note,
+                tags: state.tags ?? [],
+            };
 
-        if (editedTrade.value === null) {
-            accounts.value[selectedAccountId.value].trades.push(newTrade);
-        } else {
-            const index = useFindIndex(accounts.value[selectedAccountId.value].trades, trade => isEqual(trade, editedTrade.value));
-            
-            if (index !== -1) {
-                accounts.value[selectedAccountId.value].trades[index] = newTrade;
+            if (editedTrade.value === null) {
+                accounts.value[selectedAccountId.value].trades.push(newTrade);
+            } else {
+                const index = useFindIndex(accounts.value[selectedAccountId.value].trades, trade => isEqual(trade, editedTrade.value));
+                
+                if (index !== -1) {
+                    accounts.value[selectedAccountId.value].trades[index] = newTrade;
+                }
             }
         }
         

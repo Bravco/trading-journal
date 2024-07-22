@@ -42,9 +42,9 @@
                     <UButton @click="isAddAccountModalOpen = false" icon="i-heroicons-x-mark" variant="ghost" color="gray"/>
                 </div>
             </template>
-            <UForm @submit="onSubmit" :schema="schema" :state="state" class="space-y-4">
+            <UForm @submit="onAddAccountSubmit" :schema="addAccountSchema" :state="addAccountState" class="space-y-4">
                 <UFormGroup label="Title" name="title" required>
-                    <UInput v-model="state.title" type="text"/>
+                    <UInput v-model="addAccountState.title" type="text"/>
                 </UFormGroup>
                 <UDivider/>
                 <UButton type="submit" label="Add" icon="i-heroicons-plus"/>
@@ -62,14 +62,21 @@
                     <UButton @click="isManageAccountsModalOpen = false" icon="i-heroicons-x-mark" variant="ghost" color="gray"/>
                 </div>
             </template>
-            <UForm @submit="" class="space-y-4">
-                <div v-for="account in accounts" class="flex gap-2">
+            <div class="space-y-4">
+                <div v-for="account in manageAccountState" class="flex gap-2">
                     <UInput v-model="account.title" class="w-full" type="text"/>
-                    <UButton icon="i-heroicons-trash" color="red"/>
+                    <UButton 
+                        @click="() => account.delete = !account.delete" 
+                        :icon="account.delete ? 'i-heroicons-check' : 'i-heroicons-trash'" 
+                        color="red"
+                    />
                 </div>
                 <UDivider/>
-                <UButton type="submit" label="Save" icon="i-heroicons-check"/>
-            </UForm>
+                <div class="flex items-center justify-between">
+                    <UButton @click="onManageAccountsSubmit" label="Save" icon="i-heroicons-check"/>
+                    <UButton @click="isManageAccountsModalOpen = false" label="Cancel" icon="i-heroicons-x-mark" variant="ghost" color="gray"/>
+                </div>
+            </div>
         </UCard>
     </UModal>
 </template>
@@ -86,11 +93,17 @@
     const accounts = useAccounts();
     const selectedAccountId = useSelectedAccountId();
 
-    const schema = object({ title: string().required("Title is required") });
+    const addAccountSchema = object({ title: string().required("Title is required") });
 
-    const initialState: any = { title: undefined };
+    const addAccountInitialState: any = { title: undefined };
     
-    const state = reactive<any>({ ...initialState });
+    const addAccountState = reactive<any>({ ...addAccountInitialState });
+    const manageAccountState = ref<any>([
+        ...accounts.value.map(account => ({
+            title: account.title,
+            delete: false,
+        })),
+    ]);
 
     const tradingAccountsItems = computed<any>(() => [
         [
@@ -132,21 +145,45 @@
     ];
 
     function openAddAccountModal() {
-        Object.assign(state, { ...initialState });
+        Object.assign(addAccountState, { ...addAccountInitialState });
         isAddAccountModalOpen.value = true;
     }
 
     function openManageAccountsModal() {
+        manageAccountState.value = [
+            ...accounts.value.map(account => ({
+                title: account.title,
+                delete: false,
+            })),
+        ];
         isManageAccountsModalOpen.value = true;
     }
 
-    async function onSubmit() {
+    async function onAddAccountSubmit() {
         accounts.value.push({
-            title: state.title,
+            title: addAccountState.title,
             trades: [],
         });
 
-        isAddAccountModalOpen.value = false;
         selectedAccountId.value = accounts.value.length - 1;
+        isAddAccountModalOpen.value = false;
+    }
+
+    async function onManageAccountsSubmit() {
+        manageAccountState.value.map((account: any, index: number) => {
+            accounts.value[index].title = account.title
+        });
+
+        for (let i = 0; i < accounts.value.length; i++) {
+            if (manageAccountState.value[i].delete) {
+                accounts.value.splice(i, 1);
+                manageAccountState.value.splice(i, 1);
+                i--;
+            } else {
+                accounts.value[i].title = manageAccountState.value[i].title
+            }
+        }
+
+        isManageAccountsModalOpen.value = false;
     }
 </script>
