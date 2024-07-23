@@ -85,7 +85,7 @@
     import { object, string } from "yup";
     import { signOut } from "firebase/auth";
 
-    const isAddAccountModalOpen = ref<boolean>(false);
+    const isAddAccountModalOpen = useIsAddAccountModalOpen();
     const isManageAccountsModalOpen = ref<boolean>(false);
 
     const auth = useFirebaseAuth()!;
@@ -118,7 +118,7 @@
                 label:"Add Account",
                 icon:"i-heroicons-plus-circle",
                 iconClass: "order-1 ml-auto",
-                click: () => openAddAccountModal(),
+                click: () => isAddAccountModalOpen.value = true,
             },
             {
                 label:"Manage Accounts",
@@ -178,6 +178,7 @@
             if (manageAccountState.value[i].delete) {
                 accounts.value.splice(i, 1);
                 manageAccountState.value.splice(i, 1);
+                selectedAccountId.value = 0;
                 i--;
             } else {
                 accounts.value[i].title = manageAccountState.value[i].title
@@ -186,4 +187,10 @@
 
         isManageAccountsModalOpen.value = false;
     }
+
+    watch(isAddAccountModalOpen, () => {
+        if (isAddAccountModalOpen.value === true) {
+            openAddAccountModal();
+        }
+    });
 </script>

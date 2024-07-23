@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col gap-6">
+    <div v-if="accounts[selectedAccountId]" class="flex flex-col gap-6">
         <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6">
             <UCard class="relative">
                 <template #header>
@@ -138,6 +138,10 @@
             </div>
         </UCard>
     </div>
+    <div v-else class="grid place-items-center gap-2">
+        <p>You have no trading accounts</p>
+        <UButton @click="isAddAccountModalOpen = true" label="Add a trading account" icon="i-heroicons-user-plus"/>
+    </div>
     <USlideover v-model="isSlideoverOpen" :ui="{ width: 'max-w-xl' }">
         <UCard class="h-full overflow-y-auto" :ui="{ rounded: 'rounded-none' }">
             <template #header>
@@ -216,6 +220,7 @@
     const accounts = useAccounts();
     const selectedAccountId = useSelectedAccountId();
     const editedTrade = useEditedTrade();
+    const isAddAccountModalOpen = useIsAddAccountModalOpen();
 
     const columns = [
         { key: "open", label: "Open Date", sortable: true },

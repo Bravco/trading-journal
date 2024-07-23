@@ -16,11 +16,11 @@
                     />
                 </div>
             </header>
-            <div>
-                <main class="p-4 overflow-y-auto">
+            <div class="h-full flex flex-col gap-4 p-4">
+                <main class="overflow-y-auto">
                     <slot/>
                 </main>
-                <footer>
+                <footer class="mt-auto">
                     <div class="w-full mt-4 text-center text-sm">Copyright &copy; 2024</div>
                 </footer>
             </div>

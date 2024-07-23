@@ -2,6 +2,8 @@ export const useEditedTrade = () => useState<Trade | null>("editedTrade", () => 
 
 export const useSelectedAccountId = () => useState<number>("selectedAccountId", () => 0);
 
+export const useIsAddAccountModalOpen = () =>  useState<boolean>("isAddAccountModalOpen", () => false);
+
 export const useAccounts = () => useState<Account[]>("accounts", () => [
     {
         title: "Fusion Markets",
