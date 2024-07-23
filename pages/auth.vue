@@ -36,8 +36,11 @@
 <script lang="ts" setup>
     import { object, string } from "yup";
     import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from "firebase/auth";
+    import type { UserCredential } from "firebase/auth";
+    import { collection, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
     const auth = useFirebaseAuth()!;
+    const firestore = useFirestore();
     const toast = useToast();
 
     const googleAuthProvider = new GoogleAuthProvider();
@@ -87,14 +90,14 @@
 
     async function signUp() {
         loading.value = true;
-        createUserWithEmailAndPassword(auth, signUpState.email, signUpState.password).then((userCredential) => {
-            loading.value = false;
-            sendEmailVerification(userCredential.user);
-            toast.add({ title: "Verification email was sent to your email address", icon: "i-heroicons-information-circle", color: "green", })
+        
+        createUserWithEmailAndPassword(auth, signUpState.email, signUpState.password).then(credential => {
+            setUserDoc(credential);
+            sendEmailVerification(credential.user);
+            toast.add({ title: "Verification email was sent to your email address", icon: "i-heroicons-information-circle", color: "green", })            
         }).catch(error => {
-            let message = "Something went wrong";
-            loading.value = false;
-            
+            let message = null;
+
             switch (error.code) {
                 case "auth/email-already-in-use":
                     message = "The email address is already used";
@@ -106,17 +109,19 @@
             }
 
             toast.add({ title: message, icon: "i-heroicons-exclamation-triangle", color: "red" });
-        });
+       });
+
+       loading.value = false;
     }
     
     async function signIn() {
         loading.value = true;
 
-        signInWithEmailAndPassword(auth, signInState.email, signInState.password).then(() => {
-            loading.value = false;
+        signInWithEmailAndPassword(auth, signInState.email, signInState.password).then(credential => {
+            setUserDoc(credential);
         }).catch(error => {
-            let message = "Something went wrong";
-            
+            let message = null;
+
             switch (error.code) {
                 case "auth/invalid-credential":
                     message = "Email or password is incorrect";
@@ -128,18 +133,40 @@
             }
 
             toast.add({ title: message, icon: "i-heroicons-exclamation-triangle", color: "red" });
-            loading.value = false;
         });
+
+        loading.value = false;
     }
 
     async function googleSignIn() {
         loading.value = true;
 
-        signInWithPopup(auth, googleAuthProvider).then(() => {
-            loading.value = false;
+        signInWithPopup(auth, googleAuthProvider).then(credential => {
+            setUserDoc(credential);
         }).catch(() => {
             toast.add({ title: "Something went wrong", icon: "i-heroicons-exclamation-triangle", color: "red" });
-            loading.value = false;
+        });
+
+        loading.value = false;
+    }
+
+    function setUserDoc(credential: UserCredential) {
+        const userRef = doc(collection(firestore, "users"), credential.user.uid);
+
+        getDoc(userRef).then(snapshot => {
+            if (snapshot.exists()) {
+                updateDoc(userRef, {
+                    uid: credential.user.uid,
+                    email: credential.user.email,
+                });
+            } else {
+                setDoc(userRef, {
+                    uid: credential.user.uid,
+                    email: credential.user.email,
+                });
+            }
+        }).catch(() => {
+            toast.add({ title: "Something went wrong", icon: "i-heroicons-exclamation-triangle", color: "red" });
         });
     }
 </script>

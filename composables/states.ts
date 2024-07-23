@@ -6,12 +6,6 @@ export const useIsAddAccountModalOpen = () =>  useState<boolean>("isAddAccountMo
 
 export const useAccounts = () => useState<Account[]>("accounts", () => [
     {
-        title: "Fusion Markets",
-        trades: [
-            
-        ],
-    },
-    {
         title: "Tradovate",
         trades: [
             {
