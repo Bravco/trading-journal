@@ -12,7 +12,7 @@
                         @click="openSlideover" 
                         label="New Trade" 
                         icon="i-heroicons-document-plus" 
-                        :disabled="accounts[selectedAccountId] ? false : true"
+                        :disabled="selectedAccount ? false : true"
                     />
                 </div>
             </header>
@@ -135,21 +135,28 @@
 </template>
 
 <script lang="ts" setup>
+    import { Timestamp } from "firebase/firestore";
+    import { collection, doc, getDoc, addDoc, updateDoc } from "firebase/firestore";
     import { object, string, number, date, array } from "yup";
 
-    const accounts = useAccounts();
+    const user = useCurrentUser();
+    const firestore = useFirestore();
+    const accountsRef = collection(firestore, `users/${user.value!.uid}/accounts`);
     const selectedAccountId = useSelectedAccountId();
+    const selectedAccountRef = doc(firestore, accountsRef.path + `/${selectedAccountId.value}`);
+    const selectedAccount = useDocument(selectedAccountRef);
+    const trades = useCollection(collection(firestore, `users/${user.value?.uid}/accounts/${selectedAccountId.value}/trades`));
     const editedTrade = useEditedTrade();
     
     const schema = object({
         open: date().required("Open Date is required"),
         symbol: string().required("Symbol is required"),
-        strategy: string(),
-        risk: number().positive("Original Risk must be a positive number"),
-        rr: number().positive("Risk Reward must be a positive number"),
-        pnl: number(),
-        imageUrl: string().url("Image Url must be a valid URL"),
-        note: string(),
+        strategy: string().nullable(),
+        risk: number().nullable().positive("Original Risk must be a positive number"),
+        rr: number().nullable().positive("Risk Reward must be a positive number"),
+        pnl: number().nullable(),
+        imageUrl: string().nullable().url("Image Url must be a valid URL"),
+        note: string().nullable(),
         tagLabel: string(),
         tagColor: string(),
         tags: array(),
@@ -171,20 +178,28 @@
     
     const state = reactive<any>({ ...initialState });
 
-    const strategyOptions = computed<any>(() => [
-        strategies.value.map(strategy => ({
+    const strategyOptions = computed<any>(() => {
+        const strategies = Array.from(new Set(
+            trades.value.flatMap(trade => trade.strategy).filter((strategy): strategy is string => strategy !== null)
+        )).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+
+        return [strategies.map(strategy => ({
             label: strategy,
             click: () => state.strategy = strategy,
-        })),
-    ]);
+        }))];
+    });
 
-    const tagOptions = computed<any[]>(() => [
-        tags.value.map(tag => ({
+    const tagOptions = computed<any[]>(() => {
+        const tags = Array.from(new Set(trades.value.flatMap(trade => trade.tags.map((tag: Tag) => JSON.stringify(tag)))))
+            .map(tagStr => JSON.parse(tagStr))
+            .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
+
+        return [tags.map(tag => ({
             label: tag.label,
             slot: tag.color,
             click: () => state.tags.push(tag),
-        })),
-    ]);
+        }))];
+    });
 
     const colorOptions: any[] = [
         colors.map(color => ({
@@ -212,7 +227,7 @@
             Object.assign(state, {
                 ...initialState,
                 ...editedTrade.value,
-                open: formatOpenDate(editedTrade.value.open),
+                open: formatOpenDate(editedTrade.value.open.toDate()),
             });
         }
 
@@ -231,31 +246,30 @@
     }
 
     async function onSubmit() {
-        if (accounts.value[selectedAccountId.value]) {
-            const newTrade: Trade = {
-                open: new Date(state.open),
+        getDoc(selectedAccountRef).then(() => {
+            const newTrade: Omit<Trade, "id"> = {
+                open: Timestamp.fromDate(new Date(state.open)),
                 symbol: state.symbol,
-                risk: state.risk ? parseFloat(state.risk) : undefined,
-                rr: state.rr ? parseFloat(state.rr) : undefined,
-                pnl: state.pnl ? parseFloat(state.pnl) : undefined,
-                imageUrl: state.imageUrl,
-                strategy: state.strategy,
-                note: state.note,
+                risk: state.risk ? parseFloat(state.risk) : null,
+                rr: state.rr ? parseFloat(state.rr) : null,
+                pnl: state.pnl ? parseFloat(state.pnl) : null,
+                imageUrl: state.imageUrl ?? null,
+                strategy: state.strategy ?? null,
+                note: state.note ?? null,
                 tags: state.tags ?? [],
             };
 
-            if (editedTrade.value === null) {
-                accounts.value[selectedAccountId.value].trades.push(newTrade);
+            if (editedTrade.value) {
+                updateDoc(doc(firestore, `${selectedAccountRef.path}/trades/${editedTrade.value.id}`), newTrade)
+                    .then(() => isTradeSlideoverOpen.value = false)
+                    .catch(() => isTradeSlideoverOpen.value = false);
             } else {
-                const index = useFindIndex(accounts.value[selectedAccountId.value].trades, trade => isEqual(trade, editedTrade.value));
-                
-                if (index !== -1) {
-                    accounts.value[selectedAccountId.value].trades[index] = newTrade;
-                }
+                addDoc(collection(firestore, selectedAccountRef.path + "/trades"), newTrade).then(tradeRef => {
+                    updateDoc(tradeRef, { id: tradeRef.id });
+                });
+                isTradeSlideoverOpen.value = false;
             }
-        }
-        
-        isTradeSlideoverOpen.value = false;
+        });
     }
 
     watch(isTradeSlideoverOpen, () => {

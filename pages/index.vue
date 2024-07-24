@@ -1,5 +1,5 @@
 <template>
-    <div v-if="accounts[selectedAccountId]" class="flex flex-col gap-6">
+    <div v-show="selectedAccount" class="flex flex-col gap-6">
         <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6">
             <UCard class="relative">
                 <template #header>
@@ -27,7 +27,7 @@
                             </UTooltip>
                         </div>
                         <UTooltip text="Total number of trades">
-                            <UBadge :label="accounts[selectedAccountId]?.trades.length ?? 0" variant="solid" color="gray"/>
+                            <UBadge :label="trades.length ?? 0" variant="solid" color="gray"/>
                         </UTooltip>
                     </div>
                 </template>
@@ -81,10 +81,10 @@
                     </div>
                 </template>
                 <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
-                    <span class="text-2xl font-bold">{{ Number.isNaN(realRr) ? 0 : realRr.toFixed(2) }}</span>
+                    <span class="text-2xl font-bold">{{ (Number.isNaN(realRr) ? 0 : realRr).toFixed(2) }}</span>
                     <div class="w-full flex flex-col gap-1">
                         <UProgress 
-                            :value="Number.isNaN(avgWin) ? 0.5 : avgWin" 
+                            :value="Number.isNaN(avgWin) ? 0 : avgWin" 
                             :max="(Number.isNaN(avgWin) ? 0 : avgWin) + Math.abs(avgLose)" 
                             color="green" 
                             :ui="{ progress: { track: '[&::-webkit-progress-bar]:bg-red-500 [&::-webkit-progress-bar]:dark:bg-red-500 [@supports(selector(&::-moz-progress-bar))]:bg-red-500 [@supports(selector(&::-moz-progress-bar))]:dark:bg-red-500' } }"
@@ -100,7 +100,7 @@
         <UCard>
             <UTable :sort="sort" :columns="columns" :rows="rows" :empty-state="{ icon: 'i-heroicons-circle-stack', label: 'No trades' }">
                 <template #open-data="{ row }">
-                    <span>{{ `${row.open.toDateString()} ${row.open.toLocaleTimeString([], { timeStyle: "short" })}` }}</span>
+                    <span>{{ `${row.open.toDate().toDateString()} ${row.open.toDate().toLocaleTimeString([], { timeStyle: "short" })}` }}</span>
                 </template>
                 <template #symbol-data="{ row }">
                     <span class="font-medium">{{ row.symbol }}</span>
@@ -134,11 +134,11 @@
                 </template>
             </UTable>
             <div class="flex justify-center sm:justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
-                <UPagination v-model="page" :page-count="tradesPerPage" :total="accounts[selectedAccountId]?.trades.length ?? 0" :max="3"/>
+                <UPagination v-model="page" :page-count="tradesPerPage" :total="trades.length ?? 0" :max="3"/>
             </div>
         </UCard>
     </div>
-    <div v-else class="grid place-items-center gap-2">
+    <div v-show="!selectedAccount" class="grid place-items-center gap-2">
         <p>You have no trading accounts</p>
         <UButton @click="isAddAccountModalOpen = true" label="Add a trading account" icon="i-heroicons-user-plus"/>
     </div>
@@ -172,7 +172,7 @@
                         color="gray" 
                         class="text-xs mb-2 active:opacity-50"
                     />
-                    <span class="text-sm">{{ `${previewedTrade.open.toDateString()} ${previewedTrade.open.toLocaleTimeString([], { timeStyle: "short" })}` }}</span>
+                    <span class="text-sm">{{ `${previewedTrade.open.toDate().toDateString()} ${previewedTrade.open.toDate().toLocaleTimeString([], { timeStyle: "short" })}` }}</span>
                     <div class="flex items-center gap-2">
                         <h2 class="font-medium text-xl">{{ previewedTrade.symbol }}</h2>
                         <div v-if="previewedTrade.pnl">
@@ -213,12 +213,20 @@
 </template>
 
 <script setup lang="ts">
+    import { collection, doc, addDoc, deleteDoc } from "firebase/firestore";
+
     definePageMeta({ layout: "app" });
 
     const clipboard = useCopyToClipboard();
     const toast = useToast();
-    const accounts = useAccounts();
+    const user = useCurrentUser();
+    const firestore = useFirestore();
+    const accountsRef = collection(firestore, `users/${user.value!.uid}/accounts`);
     const selectedAccountId = useSelectedAccountId();
+    const selectedAccountRef = doc(firestore, accountsRef.path + `/${selectedAccountId.value}`);
+    const selectedAccount = useDocument(selectedAccountRef);
+    const tradesRef = collection(firestore, selectedAccountRef.path + "/trades");
+    const trades = useCollection(tradesRef);
     const editedTrade = useEditedTrade();
     const isAddAccountModalOpen = useIsAddAccountModalOpen();
 
@@ -233,7 +241,7 @@
         { key: "actions" },
     ];
 
-    const tradeActions = (trade : Trade) => [
+    const tradeActions = (trade: Trade) => [
         [
             {
                 label: "Preview",
@@ -253,19 +261,14 @@
             {
                 label: "Duplicate",
                 icon: "i-heroicons-document-duplicate",
-                click: () => accounts.value[selectedAccountId.value]?.trades.push(trade),
+                click: () => addDoc(tradesRef, trade),
             },
         ],
         [
             {
                 label: "Delete",
                 icon: "i-heroicons-trash",
-                click: () => {
-                    if (accounts.value[selectedAccountId.value]) {
-                        accounts.value[selectedAccountId.value].trades = 
-                            accounts.value[selectedAccountId.value].trades.filter(t => t !== trade);
-                    }
-                },
+                click: () => deleteDoc(doc(firestore, `${tradesRef.path}/${trade.id}`)),
             },
         ],
     ];
@@ -313,25 +316,39 @@
         }
     }));
 
-    const rows = computed<Trade[]>(() => {
+    const rows = computed<any>(() => {
         const { column, direction } = sort.value;
-        if (accounts.value[selectedAccountId.value]) {
-            return useOrderBy(accounts.value[selectedAccountId.value].trades, column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
-        } else {
-            return [];
-        }
+        if (trades.value) {
+            return useOrderBy(trades.value, column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
+        } else return [];
     });
 
-    const winTrades = computed<Trade[]>(() => accounts.value[selectedAccountId.value]?.trades.filter(trade => trade.pnl && trade.pnl > 0)  ?? []);
-    const loseTrades = computed<Trade[]>(() => accounts.value[selectedAccountId.value]?.trades.filter(trade => trade.pnl && trade.pnl < 0) ?? []);
-    const breakevenTrades = computed<Trade[]>(() => accounts.value[selectedAccountId.value]?.trades.filter(trade => trade.pnl === 0) ?? []);
+    const winTrades = computed<any[]>(() => trades.value.filter(trade => trade.pnl && trade.pnl > 0));
+    const loseTrades = computed<any[]>(() => trades.value.filter(trade => trade.pnl && trade.pnl < 0));
+    const breakevenTrades = computed<any[]>(() => trades.value.filter(trade => trade.pnl === 0));
 
     const grossProfit = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0));
     const grossLoss = computed<number>(() => loseTrades.value.reduce((acc, trade) => acc + Math.abs(trade.pnl ?? 0), 0));
+    const totalPnl = computed<number>(() => trades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0)) ?? 0;
 
-    const totalPnl = computed<number>(() => accounts.value[selectedAccountId.value]?.trades.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0) ?? 0);
-    const winRate = computed<number>(() => (winTrades.value.length / accounts.value[selectedAccountId.value]?.trades.length) * 100 ?? 0);
-    const breakevenRate = computed<number>(() => (breakevenTrades.value.length / accounts.value[selectedAccountId.value]?.trades.length) * 100 ?? 0);
+    const cumulativePnl = computed<number[]>(() => {
+        const sortedTrades = trades.value.sort((a, b) => a.open.toDate().getTime() - b.open.toDate().getTime()) ?? [];
+        const pnlValues = sortedTrades.map(trade => trade.pnl);
+
+        return pnlValues.reduce((acc: number[], pnl) => {
+            if (pnl) {
+                if (acc.length === 0) {
+                    acc.push(pnl);
+                } else {
+                    acc.push(acc[acc.length - 1] + pnl);
+                }
+            }
+            return acc;
+        }, []);
+    });
+
+    const winRate = computed<number>(() => (winTrades.value.length / trades.value.length) * 100 ?? 0);
+    const breakevenRate = computed<number>(() => (breakevenTrades.value.length / trades.value.length) * 100 ?? 0);
     const profitFactor = computed<number>(() => grossProfit.value / grossLoss.value);
 
     const avgWin = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0) / winTrades.value.length);
@@ -346,18 +363,16 @@
     const realRr = computed<number>(() => Math.abs(avgWin.value / avgLose.value));
 
     onMounted(() => {
-        window.addEventListener("resize", handleResize);
+        if (chart.value) {
+            const canvas = chart.value.getDom().querySelector("canvas") as HTMLCanvasElement;
+            if (canvas) canvas.classList.add("rounded-b-lg");
+            
+            window.addEventListener("resize", handleResize);
+            onBeforeUnmount(() => window.removeEventListener("resize", handleResize));
 
-        const canvas = chart.value.getDom().querySelector("canvas") as HTMLCanvasElement;
-
-        if (canvas) {
-            canvas.classList.add("rounded-lg")
-        }
-
-        onBeforeUnmount(() => window.removeEventListener("resize", handleResize));
-
-        function handleResize() {
-            chart.value.resize();
+            function handleResize() {
+                chart.value.resize();
+            }
         }
     });
 </script>

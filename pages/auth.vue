@@ -75,13 +75,6 @@
         password: undefined,
     });
 
-    onMounted(async () => {
-        const user = await getCurrentUser();
-        if (user) {
-            navigateTo("/");
-        }
-    });
-
     function toggleSigningUp() {
         if (!loading.value) {
             signingUp.value = !signingUp.value;
@@ -92,7 +85,7 @@
         loading.value = true;
         
         createUserWithEmailAndPassword(auth, signUpState.email, signUpState.password).then(credential => {
-            setUserDoc(credential);
+            saveUserData(credential);
             sendEmailVerification(credential.user);
             toast.add({ title: "Verification email was sent to your email address", icon: "i-heroicons-information-circle", color: "green", })            
         }).catch(error => {
@@ -118,7 +111,7 @@
         loading.value = true;
 
         signInWithEmailAndPassword(auth, signInState.email, signInState.password).then(credential => {
-            setUserDoc(credential);
+            saveUserData(credential);
         }).catch(error => {
             let message = null;
 
@@ -142,7 +135,7 @@
         loading.value = true;
 
         signInWithPopup(auth, googleAuthProvider).then(credential => {
-            setUserDoc(credential);
+            saveUserData(credential);
         }).catch(() => {
             toast.add({ title: "Something went wrong", icon: "i-heroicons-exclamation-triangle", color: "red" });
         });
@@ -150,7 +143,7 @@
         loading.value = false;
     }
 
-    function setUserDoc(credential: UserCredential) {
+    function saveUserData(credential: UserCredential) {
         const userRef = doc(collection(firestore, "users"), credential.user.uid);
 
         getDoc(userRef).then(snapshot => {

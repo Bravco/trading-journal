@@ -84,13 +84,16 @@
 <script lang="ts" setup>
     import { object, string } from "yup";
     import { signOut } from "firebase/auth";
+    import { collection, doc, addDoc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
 
     const isAddAccountModalOpen = useIsAddAccountModalOpen();
     const isManageAccountsModalOpen = ref<boolean>(false);
 
     const auth = useFirebaseAuth()!;
-    const user = useCurrentUser();
-    const accounts = useAccounts();
+    const user = useCurrentUser();    
+    const firestore = useFirestore();
+    const accountsRef = collection(firestore, `users/${user.value!.uid}/accounts`);
+    const accounts = useCollection(accountsRef);
     const selectedAccountId = useSelectedAccountId();
 
     const addAccountSchema = object({ title: string().required("Title is required") });
@@ -98,19 +101,14 @@
     const addAccountInitialState: any = { title: undefined };
     
     const addAccountState = reactive<any>({ ...addAccountInitialState });
-    const manageAccountState = ref<any>([
-        ...accounts.value.map(account => ({
-            title: account.title,
-            delete: false,
-        })),
-    ]);
+    const manageAccountState = ref<any>([]);
 
     const tradingAccountsItems = computed<any>(() => [
         [
             ...accounts.value.map(account => ({
                 label: account.title,
-                slot: selectedAccountId.value === accounts.value.indexOf(account) ? "active" : null,
-                click: () => selectedAccountId.value = accounts.value.indexOf(account),
+                slot: selectedAccountId.value === account.id ? "active" : null,
+                click: () => selectedAccountId.value = account.id,
             })),
         ],
         [
@@ -152,6 +150,7 @@
     function openManageAccountsModal() {
         manageAccountState.value = [
             ...accounts.value.map(account => ({
+                id: account.id,
                 title: account.title,
                 delete: false,
             })),
@@ -160,30 +159,31 @@
     }
 
     async function onAddAccountSubmit() {
-        accounts.value.push({
+        addDoc(accountsRef, {
             title: addAccountState.title,
-            trades: [],
-        });
+        }).then(docRef => {
+            updateDoc(docRef, {
+                id: docRef.id,
+            });
 
-        selectedAccountId.value = accounts.value.length - 1;
+            selectedAccountId.value = docRef.id;
+        });
+        
         isAddAccountModalOpen.value = false;
     }
 
     async function onManageAccountsSubmit() {
-        manageAccountState.value.map((account: any, index: number) => {
-            accounts.value[index].title = account.title
+        manageAccountState.value.map((account: any) => {
+            getDoc(doc(firestore, `users/${user.value?.uid}/accounts/${account.id}`)).then(snapshot => {
+                if (account.delete === true) {
+                    deleteDoc(snapshot.ref);
+                } else {
+                    updateDoc(snapshot.ref, {
+                        title: account.title,
+                    });
+                }
+            });
         });
-
-        for (let i = 0; i < accounts.value.length; i++) {
-            if (manageAccountState.value[i].delete) {
-                accounts.value.splice(i, 1);
-                manageAccountState.value.splice(i, 1);
-                selectedAccountId.value = 0;
-                i--;
-            } else {
-                accounts.value[i].title = manageAccountState.value[i].title
-            }
-        }
 
         isManageAccountsModalOpen.value = false;
     }
