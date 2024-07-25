@@ -226,9 +226,21 @@
     const selectedAccountRef = doc(firestore, accountsRef.path + `/${selectedAccountId.value}`);
     const selectedAccount = useDocument(selectedAccountRef);
     const tradesRef = collection(firestore, selectedAccountRef.path + "/trades");
-    //const trades = useCollection(tradesRef);
     const editedTrade = useEditedTrade();
     const isAddAccountModalOpen = useIsAddAccountModalOpen();
+
+    const tradesPerPage: number = 10;
+    const page = ref<number>(1);
+    
+    const trades = ref<Trade[]>([]);
+    const previewedTrade = ref<Trade | null>(null);
+    const isSlideoverOpen = ref<boolean>(false);
+    const chart = ref();
+
+    const sort = ref<{ column: keyof Trade; direction: "asc" | "desc" }>({
+        column: "open",
+        direction: "desc",
+    });
 
     const columns = [
         { key: "open", label: "Open Date", sortable: true },
@@ -272,25 +284,6 @@
             },
         ],
     ];
-
-    const tradesPerPage: number = 10;
-    const page = ref<number>(1);
-
-    const isSlideoverOpen = ref<boolean>(false);
-    const previewedTrade = ref<Trade | null>(null);
-
-    const sort = ref<{ column: keyof Trade; direction: "asc" | "desc" }>({
-        column: "open",
-        direction: "desc",
-    });
-
-    const chart = ref();
-
-    const trades = ref<Trade[]>([]);
-    
-    onSnapshot(tradesRef, snapshot => {
-        trades.value = [...snapshot.docs.map(doc => doc.data())] as Trade[];
-    });
 
     const chartOption = computed<ECOption>(() => ({
         xAxis: {
@@ -367,6 +360,8 @@
         }
     });
     const realRr = computed<number>(() => Math.abs(avgWin.value / avgLose.value));
+
+    onSnapshot(tradesRef, snapshot => trades.value = [...snapshot.docs.map(doc => doc.data())] as Trade[]);
 
     onMounted(() => {
         if (chart.value) {
