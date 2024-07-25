@@ -16,11 +16,11 @@
                     />
                 </div>
             </header>
-            <div class="h-full flex flex-col gap-4 p-4">
-                <main class="overflow-y-auto">
+            <div class="h-full flex flex-col">
+                <main class="overflow-y-auto p-4">
                     <slot/>
                 </main>
-                <footer class="mt-auto">
+                <footer class="mt-auto pb-4">
                     <div class="w-full mt-4 text-center text-sm">Copyright &copy; 2024</div>
                 </footer>
             </div>
@@ -218,16 +218,17 @@
             return isoString + timeString;
         }
 
-        if (editedTrade.value === null) {
-            Object.assign(state, {
-                ...initialState,
-                open: formatOpenDate(new Date()),
-            });
-        } else {
+        if (editedTrade.value) {
             Object.assign(state, {
                 ...initialState,
                 ...editedTrade.value,
                 open: formatOpenDate(editedTrade.value.open.toDate()),
+            });
+        } else {
+            Object.assign(state, {
+                ...initialState,
+                open: formatOpenDate(new Date()),
+                tags: [],
             });
         }
 
@@ -259,15 +260,15 @@
                 tags: state.tags ?? [],
             };
 
-            if (editedTrade.value) {
-                updateDoc(doc(firestore, `${selectedAccountRef.path}/trades/${editedTrade.value.id}`), newTrade)
-                    .then(() => isTradeSlideoverOpen.value = false)
-                    .catch(() => isTradeSlideoverOpen.value = false);
-            } else {
+            if (editedTrade.value === null) {
                 addDoc(collection(firestore, selectedAccountRef.path + "/trades"), newTrade).then(tradeRef => {
                     updateDoc(tradeRef, { id: tradeRef.id });
                 });
                 isTradeSlideoverOpen.value = false;
+            } else {
+                updateDoc(doc(firestore, `${selectedAccountRef.path}/trades/${editedTrade.value.id}`), newTrade)
+                    .then(() => isTradeSlideoverOpen.value = false)
+                    .catch(() => isTradeSlideoverOpen.value = false);
             }
         });
     }

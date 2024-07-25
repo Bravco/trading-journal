@@ -15,7 +15,7 @@
                         {{ `${totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)} €` }}
                     </span>
                 </div>
-                <VChart ref="chart" class="w-full h-2/6 absolute left-0 bottom-0" :option="chartOption"/>
+                <VChart v-if="cumulativePnl.length > 1" ref="chart" class="w-full h-2/6 absolute left-0 bottom-0" :option="chartOption" :autoresize="true"/>
             </UCard>
             <UCard>
                 <template #header>
@@ -196,7 +196,7 @@
                     <pre class="font-sans">{{ previewedTrade.note }}</pre>
                 </div>
             </div>
-            <template v-if="previewedTrade && previewedTrade.strategy && previewedTrade.tags.length > 0" #footer>
+            <template v-if="previewedTrade && (previewedTrade.strategy || previewedTrade.tags.length > 0)" #footer>
                 <div v-if="previewedTrade.strategy" class="mb-4">
                     <h3 class="mb-2 font-medium text-lg">Strategy</h3>
                     <UBadge :label="previewedTrade.strategy" variant="subtle"/>
@@ -213,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-    import { collection, doc, addDoc, deleteDoc } from "firebase/firestore";
+    import { collection, doc, addDoc, deleteDoc, getDocs, onSnapshot } from "firebase/firestore";
 
     definePageMeta({ layout: "app" });
 
@@ -226,7 +226,7 @@
     const selectedAccountRef = doc(firestore, accountsRef.path + `/${selectedAccountId.value}`);
     const selectedAccount = useDocument(selectedAccountRef);
     const tradesRef = collection(firestore, selectedAccountRef.path + "/trades");
-    const trades = useCollection(tradesRef);
+    //const trades = useCollection(tradesRef);
     const editedTrade = useEditedTrade();
     const isAddAccountModalOpen = useIsAddAccountModalOpen();
 
@@ -285,7 +285,13 @@
     });
 
     const chart = ref();
+
+    const trades = ref<Trade[]>([]);
     
+    onSnapshot(tradesRef, snapshot => {
+        trades.value = [...snapshot.docs.map(doc => doc.data())] as Trade[];
+    });
+
     const chartOption = computed<ECOption>(() => ({
         xAxis: {
             type: "category",
@@ -316,10 +322,10 @@
         }
     }));
 
-    const rows = computed<any>(() => {
+    const rows = computed<Trade[]>(() => {
         const { column, direction } = sort.value;
         if (trades.value) {
-            return useOrderBy(trades.value, column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
+            return useOrderBy(trades.value as Trade[], column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
         } else return [];
     });
 
