@@ -213,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-    import { collection, doc, addDoc, deleteDoc, getDocs, onSnapshot } from "firebase/firestore";
+    import { collection, doc, addDoc, deleteDoc, getDoc, updateDoc, onSnapshot } from "firebase/firestore";
 
     definePageMeta({ layout: "app" });
 
@@ -273,14 +273,32 @@
             {
                 label: "Duplicate",
                 icon: "i-heroicons-document-duplicate",
-                click: () => addDoc(tradesRef, trade),
+                click: () => {
+                    addDoc(tradesRef, trade).then(ref => {
+                        updateDoc(ref, { id: ref.id });
+                    });
+                },
             },
         ],
         [
             {
                 label: "Delete",
                 icon: "i-heroicons-trash",
-                click: () => deleteDoc(doc(firestore, `${tradesRef.path}/${trade.id}`)),
+                click: () => {
+                    getDoc(doc(firestore, `${tradesRef.path}/${trade.id}`)).then(snapshot => {
+                        const tmp = snapshot.data();
+                        deleteDoc(snapshot.ref).then(() => {
+                            toast.add({
+                                title: "Trade has been deleted",
+                                icon: "i-heroicons-trash",
+                                actions: [{
+                                    label: "Undo",
+                                    click: () => addDoc(tradesRef, tmp),
+                                }],
+                            });
+                        });
+                    });
+                },
             },
         ],
     ];
