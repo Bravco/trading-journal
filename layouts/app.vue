@@ -27,24 +27,22 @@
                                     : "All"
                                 }}
                             </UButton>
-
                             <template #panel="{ close }">
                                 <div class="flex items-center sm:divide-x divide-gray-200 dark:divide-gray-800">
                                     <div class="hidden sm:flex flex-col py-4">
-                                    <UButton
-                                        v-for="(range, index) in dateRanges"
-                                        :key="index"
-                                        :label="range.label"
-                                        color="gray"
-                                        variant="ghost"
-                                        class="rounded-none px-6"
-                                        :class="[isDateRangeSelected(range.duration) ? 'bg-gray-100 dark:bg-gray-800' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50']"
-                                        truncate
-                                        @click="selectDateRange(range.duration)"
-                                    />
+                                        <UButton
+                                            v-for="(range, index) in dateRanges"
+                                            :key="index"
+                                            :label="range.label"
+                                            color="gray"
+                                            variant="ghost"
+                                            class="rounded-none px-6"
+                                            :class="[isDateRangeSelected(range.duration) ? 'bg-gray-100 dark:bg-gray-800' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50']"
+                                            truncate
+                                            @click="selectDateRange(range.duration)"
+                                        />
                                     </div>
-
-                                    <DatePicker v-model="selectedDateRange" @close="close" />
+                                    <DatePicker v-model="selectedDateRange" @close="close"/>
                                 </div>
                             </template>
                         </UPopover>
@@ -179,7 +177,8 @@
     import { Timestamp } from "firebase/firestore";
     import { collection, doc, getDoc, addDoc, updateDoc } from "firebase/firestore";
     import { object, string, number, date, array } from "yup";
-    import { sub, format, isSameDay, type Duration } from "date-fns";
+    import { sub, format, isSameDay } from "date-fns";
+    import type { Duration } from "date-fns";
 
     const user = useCurrentUser();
     const firestore = useFirestore();
@@ -189,6 +188,7 @@
     const selectedAccount = useDocument(selectedAccountRef);
     const trades = useCollection(collection(firestore, `users/${user.value?.uid}/accounts/${selectedAccountId.value}/trades`));
     const editedTrade = useEditedTrade();
+    const selectedDateRange = useSelectedDateRange();
     
     const schema = object({
         open: date().required("Open Date is required"),
@@ -219,7 +219,6 @@
     };
     
     const state = reactive<any>({ ...initialState });
-    const selectedDateRange = ref(null);
 
     const dateRanges = [
         { label: "Today", duration: { days: 0 } },

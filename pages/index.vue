@@ -214,6 +214,7 @@
 
 <script setup lang="ts">
     import { collection, doc, addDoc, deleteDoc, getDoc, updateDoc, onSnapshot } from "firebase/firestore";
+    import { isWithinInterval, isSameDay } from "date-fns";
 
     definePageMeta({ layout: "app" });
 
@@ -228,6 +229,7 @@
     const tradesRef = collection(firestore, selectedAccountRef.path + "/trades");
     const editedTrade = useEditedTrade();
     const isAddAccountModalOpen = useIsAddAccountModalOpen();
+    const selectedDateRange = useSelectedDateRange();
 
     const tradesPerPage: number = 10;
     const page = ref<number>(1);
@@ -334,9 +336,19 @@
     }));
 
     const rows = computed<Trade[]>(() => {
-        const { column, direction } = sort.value;
         if (trades.value) {
-            return useOrderBy(trades.value as Trade[], column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
+            const { column, direction } = sort.value;
+            const fileteredTrades: Trade[] = selectedDateRange.value
+                ? (trades.value as Trade[]).filter(trade => {
+                    const tradeOpen = trade.open.toDate()
+                    if (isWithinInterval(tradeOpen, selectedDateRange.value!) 
+                        || isSameDay(tradeOpen, selectedDateRange.value!.start)
+                        || isSameDay(tradeOpen, selectedDateRange.value!.end)) {
+                            return true;
+                    } else return false;
+                })
+                : trades.value as Trade[];
+            return useOrderBy(fileteredTrades, column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
         } else return [];
     });
 
