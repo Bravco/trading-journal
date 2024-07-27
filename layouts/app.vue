@@ -8,12 +8,53 @@
                         <UButton class="lg:hidden" @click="isSidebarSlideoverOpen = true" icon="i-heroicons-bars-3" variant="ghost" color="gray" square/>
                         <h1 class="text-xl font-bold">Trading <span class="text-primary">Journal</span></h1>
                     </div>
-                    <UButton 
-                        @click="openSlideover" 
-                        label="New Trade" 
-                        icon="i-heroicons-document-plus" 
-                        :disabled="selectedAccount ? false : true"
-                    />
+                    <div class="flex items-center gap-2">
+                        <UButton 
+                            v-if="selectedDateRange" 
+                            @click="clearSelectedRange"
+                            icon="i-heroicons-x-mark" 
+                            variant="ghost" 
+                            color="gray"
+                            :ui="{ rounded: 'rounded-full' }"
+                        />
+                        <UPopover :popper="{ placement: 'bottom-start' }">
+                            <UButton icon="i-heroicons-calendar-days" variant="outline" color="gray">
+                                {{
+                                    selectedDateRange
+                                    ? (isSameDay(selectedDateRange.start, selectedDateRange.end)
+                                        ? format(selectedDateRange.start, "d MMM, yyy")
+                                        : `${format(selectedDateRange.start, "d MMM, yyy")} - ${format(selectedDateRange.end, "d MMM, yyy")}`)
+                                    : "All"
+                                }}
+                            </UButton>
+
+                            <template #panel="{ close }">
+                                <div class="flex items-center sm:divide-x divide-gray-200 dark:divide-gray-800">
+                                    <div class="hidden sm:flex flex-col py-4">
+                                    <UButton
+                                        v-for="(range, index) in dateRanges"
+                                        :key="index"
+                                        :label="range.label"
+                                        color="gray"
+                                        variant="ghost"
+                                        class="rounded-none px-6"
+                                        :class="[isDateRangeSelected(range.duration) ? 'bg-gray-100 dark:bg-gray-800' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50']"
+                                        truncate
+                                        @click="selectDateRange(range.duration)"
+                                    />
+                                    </div>
+
+                                    <DatePicker v-model="selectedDateRange" @close="close" />
+                                </div>
+                            </template>
+                        </UPopover>
+                        <UButton 
+                            @click="openSlideover" 
+                            label="New Trade" 
+                            icon="i-heroicons-document-plus" 
+                            :disabled="selectedAccount ? false : true"
+                        />
+                    </div>
                 </div>
             </header>
             <div class="h-full flex flex-col">
@@ -138,6 +179,7 @@
     import { Timestamp } from "firebase/firestore";
     import { collection, doc, getDoc, addDoc, updateDoc } from "firebase/firestore";
     import { object, string, number, date, array } from "yup";
+    import { sub, format, isSameDay, type Duration } from "date-fns";
 
     const user = useCurrentUser();
     const firestore = useFirestore();
@@ -177,6 +219,31 @@
     };
     
     const state = reactive<any>({ ...initialState });
+    const selectedDateRange = ref(null);
+
+    const dateRanges = [
+        { label: "Today", duration: { days: 0 } },
+        { label: "Last 7 days", duration: { days: 7 } },
+        { label: "Last 14 days", duration: { days: 14 } },
+        { label: "Last 30 days", duration: { days: 30 } },
+        { label: "Last 3 months", duration: { months: 3 } },
+        { label: "Last 6 months", duration: { months: 6 } },
+        { label: "Last year", duration: { years: 1 } },
+    ];
+
+    function isDateRangeSelected(duration: Duration) {
+        if (selectedDateRange.value) {
+            return isSameDay(selectedDateRange.value.start, sub(new Date(), duration)) && isSameDay(selectedDateRange.value.end, new Date());
+        } else return false;
+    }
+
+    function selectDateRange(duration: Duration) {
+        selectedDateRange.value = { start: sub(new Date(), duration), end: new Date() };
+    }
+
+    function clearSelectedRange() {
+        selectedDateRange.value = null;
+    }
 
     const strategyOptions = computed<any>(() => {
         const strategies = Array.from(new Set(

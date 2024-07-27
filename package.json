@@ -22,9 +22,11 @@
   "type": "module",
   "dependencies": {
     "@firebase/app-types": "^0.9.2",
+    "date-fns": "^3.6.0",
     "firebase": "^10.12.3",
     "firebase-admin": "^12.2.0",
     "firebase-functions": "^5.0.1",
+    "v-calendar": "next",
     "yup": "^1.4.0"
   }
 }
