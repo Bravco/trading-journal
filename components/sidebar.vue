@@ -84,11 +84,12 @@
 <script lang="ts" setup>
     import { object, string } from "yup";
     import { signOut } from "firebase/auth";
-    import { collection, doc, addDoc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
+    import { collection, addDoc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
 
     const isAddAccountModalOpen = useIsAddAccountModalOpen();
     const isManageAccountsModalOpen = ref<boolean>(false);
 
+    const router = useRouter();
     const auth = useFirebaseAuth()!;
     const user = useCurrentUser();    
     const firestore = useFirestore();
@@ -127,10 +128,20 @@
         ],
     ]);
 
-    const navLinks = [
-        { label: "Dashboard", icon: "i-heroicons-squares-2x2", active: true },
-        { label: "Analytics", icon: "i-heroicons-chart-bar" },
-    ];
+    const navLinks = computed(() => [
+        { 
+            label: "Dashboard", 
+            icon: "i-heroicons-squares-2x2", 
+            active: router.currentRoute.value.path === "/",
+            click: () => navigateTo("/"),
+        },
+        { 
+            label: "Analytics", 
+            icon: "i-heroicons-chart-bar",
+            active: router.currentRoute.value.path === "/analytics",
+            click: () => navigateTo("/analytics"),
+        },
+    ]);
 
     const userItems = [
         [{ label: user.value?.email, slot: "account", disabled: true }],
@@ -174,9 +185,10 @@
 
     async function onManageAccountsSubmit() {
         manageAccountState.value.map((account: any) => {
-            getDoc(doc(firestore, `users/${user.value?.uid}/accounts/${account.id}`)).then(snapshot => {
+            getDoc(selectedAccountRef.value).then(snapshot => {
                 if (account.delete === true) {
                     deleteDoc(snapshot.ref);
+                    selectedAccountId.value = null;
                 } else {
                     updateDoc(snapshot.ref, {
                         title: account.title,

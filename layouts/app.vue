@@ -57,7 +57,11 @@
             </header>
             <div class="h-full flex flex-col">
                 <main class="overflow-y-auto p-4">
-                    <slot/>
+                    <slot v-if="selectedAccount"/>
+                    <div v-else class="grid place-items-center gap-2">
+                        <p>You have no trading accounts</p>
+                        <UButton @click="isAddAccountModalOpen = true" label="Add a trading account" icon="i-heroicons-user-plus"/>
+                    </div>
                 </main>
                 <footer class="mt-auto pb-4">
                     <div class="w-full mt-4 text-center text-sm">Copyright &copy; 2024</div>
@@ -175,19 +179,16 @@
 
 <script lang="ts" setup>
     import { Timestamp } from "firebase/firestore";
-    import { collection, doc, getDoc, addDoc, updateDoc } from "firebase/firestore";
+    import { doc, getDoc, addDoc, updateDoc } from "firebase/firestore";
     import { object, string, number, date, array } from "yup";
     import { sub, format, isSameDay } from "date-fns";
     import type { Duration } from "date-fns";
 
-    const user = useCurrentUser();
     const firestore = useFirestore();
-    const accountsRef = collection(firestore, `users/${user.value!.uid}/accounts`);
-    const selectedAccountId = useSelectedAccountId();
-    const selectedAccountRef = doc(firestore, accountsRef.path + `/${selectedAccountId.value}`);
-    const selectedAccount = useDocument(selectedAccountRef);
-    const trades = useCollection(collection(firestore, `users/${user.value?.uid}/accounts/${selectedAccountId.value}/trades`));
+    const selectedAccount = useSelectedAccount();
+    const trades = useTrades();
     const editedTrade = useEditedTrade();
+    const isAddAccountModalOpen = useIsAddAccountModalOpen();
     const selectedDateRange = useSelectedDateRange();
     
     const schema = object({
@@ -313,7 +314,7 @@
     }
 
     async function onSubmit() {
-        getDoc(selectedAccountRef).then(() => {
+        getDoc(selectedAccountRef.value).then(() => {
             const newTrade: Omit<Trade, "id"> = {
                 open: Timestamp.fromDate(new Date(state.open)),
                 symbol: state.symbol,
@@ -327,12 +328,12 @@
             };
 
             if (editedTrade.value === null) {
-                addDoc(collection(firestore, selectedAccountRef.path + "/trades"), newTrade).then(tradeRef => {
+                addDoc(tradesRef.value, newTrade).then(tradeRef => {
                     updateDoc(tradeRef, { id: tradeRef.id });
                 });
                 isTradeSlideoverOpen.value = false;
             } else {
-                updateDoc(doc(firestore, `${selectedAccountRef.path}/trades/${editedTrade.value.id}`), newTrade)
+                updateDoc(doc(firestore, `${tradesRef.value.path}/${editedTrade.value.id}`), newTrade)
                     .then(() => isTradeSlideoverOpen.value = false)
                     .catch(() => isTradeSlideoverOpen.value = false);
             }

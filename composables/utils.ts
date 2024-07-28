@@ -1,3 +1,5 @@
+import { type CollectionReference, type DocumentReference, collection, doc } from "firebase/firestore";
+
 export const colors: string[] = [
     "gray",
     "red",
@@ -39,3 +41,15 @@ export function isTrade(obj: any): obj is Trade {
         Array.isArray(obj.tags) &&
         obj.tags.every(isTag);
 }
+
+export const selectedAccountRef = computed<DocumentReference>(() => {
+    const user = useCurrentUser();
+    const firestore = useFirestore();
+    const selectedAccountId = useSelectedAccountId();
+    return doc(firestore, `users/${user.value!.uid}/accounts/${selectedAccountId.value}`);
+});
+
+export const tradesRef = computed<CollectionReference>(() => {
+    const firestore = useFirestore();
+    return collection(firestore, selectedAccountRef.value.path + "/trades");
+});
