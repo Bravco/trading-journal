@@ -18,8 +18,10 @@
     watch(selectedAccountId, async () => {
         if (selectedAccountId.value) {
             selectedAccount.value = (await getDoc(selectedAccountRef.value)).data();
+            onSnapshot(tradesRef.value, snapshot => trades.value = [...snapshot.docs.map(doc => doc.data())] as Trade[]);
         } else {
             selectedAccount.value = null;
+            trades.value = [];
         }
     });
 
@@ -28,12 +30,9 @@
             if (user) {
                 getDocs(query(collection(firestore, `users/${user.uid}/accounts`))).then(snapshot => {
                     if (snapshot.docs.length > 0) {
-                        const tradesRef = collection(firestore, `users/${user.uid}/accounts/${snapshot.docs[0].id}/trades`);
                         selectedAccountId.value = snapshot.docs[0].id;
-                        onSnapshot(tradesRef, snapshot => trades.value = [...snapshot.docs.map(doc => doc.data())] as Trade[]);
                     }
                 });
-                
                 navigateTo("/");
             } else {
                 selectedAccountId.value = null;
