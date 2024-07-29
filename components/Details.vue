@@ -10,11 +10,18 @@
                 </div>
             </template>
             <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
-                <span :class="['z-10', 'text-3xl', 'font-bold', { 'text-green-500': totalPnl > 0 }, { 'text-red-500': totalPnl < 0 }]">
+                <span :class="['text-3xl', 'font-bold', { 'text-green-500': totalPnl > 0 }, { 'text-red-500': totalPnl < 0 }]">
                     {{ `${totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)} €` }}
                 </span>
             </div>
-            <Chart v-if="cumulativePnl.length > 1" :option="chartOption" class="w-full h-2/6 absolute left-0 bottom-0"/>
+            <VChart 
+                v-if="cumulativePnl.length > 1" 
+                ref="chart" 
+                :option="chartOption" 
+                :autoresize="true"
+                v-on:rendered="() => renderChart()"
+                class="w-full h-1/6 absolute left-0 bottom-0"
+            />
         </UCard>
         <UCard>
             <template #header>
@@ -101,6 +108,8 @@
 <script lang="ts" setup>
     const trades = useTrades();
 
+    const chart = ref();
+
     const chartOption = computed<ECOption>(() => ({
         xAxis: {
             type: "category",
@@ -118,10 +127,12 @@
             splitLine: { show: false },
         },
         series: [{
-            data: cumulativePnl.value,
+            data: cumulativePnl.value.map(obj => obj.pnl),
             type: "line",
-            areaStyle: {},
             smooth: true,
+            showSymbol: false,
+            areaStyle: { opacity: 0.1, color: "rgb(96, 165, 250)" },
+            lineStyle: { color: "rgb(96, 165, 250)" },
         }],
         grid: {
             left: 0,
@@ -154,19 +165,37 @@
     });
     const realRr = computed<number>(() => Math.abs(avgWin.value / avgLose.value));
 
-    const cumulativePnl = computed<number[]>(() => {
+    const cumulativePnl = computed<CumulativePnl[]>(() => {
         const sortedTrades = trades.value.sort((a, b) => a.open.toDate().getTime() - b.open.toDate().getTime()) ?? [];
-        const pnlValues = sortedTrades.map(trade => trade.pnl);
+        const pnlByDay: { [date: string]: number } = {};
 
-        return pnlValues.reduce((acc: number[], pnl) => {
+        sortedTrades.forEach(trade => {
+            const date = trade.open.toDate().toISOString().split("T")[0];
+            const pnl = trade.pnl;
+
             if (pnl) {
-                if (acc.length === 0) {
-                    acc.push(pnl);
+                if (pnlByDay[date]) {
+                    pnlByDay[date] += pnl;
                 } else {
-                    acc.push(acc[acc.length - 1] + pnl);
+                    pnlByDay[date] = pnl;
                 }
             }
-            return acc;
-        }, []);
+        });
+
+        let cumulativeTotal = 0;
+        return Object.keys(pnlByDay).map(date => {
+            cumulativeTotal += pnlByDay[date];
+            return {
+                date: new Date(date),
+                pnl: cumulativeTotal,
+            };
+        });
     });
+
+    function renderChart() {
+        if (chart.value) {
+            const canvas = chart.value.getDom().querySelector("canvas") as HTMLCanvasElement;
+            if (canvas) canvas.classList.add("rounded-b-lg");
+        }
+    }
 </script>

@@ -1,9 +1,9 @@
 <template>
     <div class="fixed inset-0 flex overflow-auto">
-        <aside class="min-w-64 sticky top-0 hidden lg:block"><Sidebar/></aside>
-        <div class="w-full lg:w-[calc(100%-16rem)]">
-            <header>
-                <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-800">
+        <aside class="min-w-64 sticky top-0 z-10 hidden lg:block"><Sidebar/></aside>
+        <div class="w-full lg:w-[calc(100%-16rem)] relative">
+            <header class="sticky top-0 z-10">
+                <div class="flex justify-between bg-white dark:bg-gray-900 items-center p-4 border-b border-gray-200 dark:border-gray-800">
                     <div class="flex items-stretch gap-2">
                         <UButton class="lg:hidden" @click="isSidebarSlideoverOpen = true" icon="i-heroicons-bars-3" variant="ghost" color="gray" square/>
                         <h1 class="text-xl font-bold">Trading <span class="text-primary">Journal</span></h1>
@@ -56,7 +56,7 @@
                 </div>
             </header>
             <div class="h-full flex flex-col">
-                <main class="overflow-y-auto p-4">
+                <main class="p-4">
                     <slot v-if="selectedAccount"/>
                     <div v-else class="grid place-items-center gap-2">
                         <p>You have no trading accounts</p>

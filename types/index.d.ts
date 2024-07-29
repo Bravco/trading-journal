@@ -18,4 +18,9 @@ declare global {
         label: string,
         color: string,
     }
+
+    type CumulativePnl = {
+        date: Date,
+        pnl: number,
+    }
 }

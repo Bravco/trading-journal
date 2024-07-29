@@ -10,7 +10,7 @@ export default defineNuxtConfig({
   },
   echarts: {
     charts: ["LineChart"],
-    components: ["GridComponent"],
+    components: ["GridComponent", "TooltipComponent"],
   },
   vuefire: {
     config: {
