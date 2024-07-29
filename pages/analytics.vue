@@ -25,7 +25,7 @@
     const chartOption = computed<ECOption>(() => ({
         xAxis: {
             type: "category",
-            data: cumulativePnl.value.map(obj => `${obj.date.toDateString()} ${obj.date.toLocaleTimeString([], { timeStyle: "short" })}`),
+            data: cumulativePnl.value.map(obj => obj.date.toDateString()),
             axisTick: { alignWithLabel: true },
             boundaryGap: false,
             splitLine: {
