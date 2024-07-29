@@ -130,7 +130,6 @@
     
     const previewedTrade = ref<Trade | null>(null);
     const isSlideoverOpen = ref<boolean>(false);
-    const chart = ref();
 
     const sort = ref<{ column: keyof Trade; direction: "asc" | "desc" }>({
         column: "open",
@@ -217,19 +216,5 @@
                 : trades.value as Trade[];
             return useOrderBy(fileteredTrades, column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
         } else return [];
-    });
-
-    onMounted(() => {
-        if (chart.value) {
-            const canvas = chart.value.getDom().querySelector("canvas") as HTMLCanvasElement;
-            if (canvas) canvas.classList.add("rounded-b-lg");
-            
-            window.addEventListener("resize", handleResize);
-            onBeforeUnmount(() => window.removeEventListener("resize", handleResize));
-
-            function handleResize() {
-                chart.value.resize();
-            }
-        }
     });
 </script>

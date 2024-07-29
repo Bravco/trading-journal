@@ -14,7 +14,7 @@
                     {{ `${totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)} €` }}
                 </span>
             </div>
-            <VChart v-if="cumulativePnl.length > 1" ref="chart" class="w-full h-2/6 absolute left-0 bottom-0" :option="chartOption" :autoresize="true"/>
+            <Chart v-if="cumulativePnl.length > 1" :option="chartOption" class="w-full h-2/6 absolute left-0 bottom-0"/>
         </UCard>
         <UCard>
             <template #header>
