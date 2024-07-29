@@ -280,9 +280,9 @@
 
     function openSlideover() {
         function formatOpenDate(date: Date) {
-            const isoString = date.toISOString().substring(0, 11); // YYYY-MM-DDT
-            const timeString = date.toLocaleTimeString().substring(0, 5); // HH:MM
-            return isoString + timeString;
+            const offset = date.getTimezoneOffset() * 60000;
+            const adjustedDate = new Date(date.getTime() - offset);
+            return adjustedDate.toISOString().substring(0, 16);
         }
 
         if (editedTrade.value) {
