@@ -33,6 +33,10 @@
                 lineStyle: { opacity: 0.1 },
             },
             axisLine: { show: false },
+            axisLabel: {
+                alignMinLabel: "left",
+                alignMaxLabel: "right",
+            }
         },
         yAxis: { 
             type: "value",
@@ -48,6 +52,13 @@
             showSymbol: false,
             areaStyle: { opacity: 0.1, color: "rgb(96, 165, 250)" },
             lineStyle: { color: "rgb(96, 165, 250)" },
+            itemStyle: {
+                color: "rgb(96, 165, 250)",
+                emphasis: {
+                    color: "rgb(96, 165, 250)",
+                    borderWidth: 0,
+                },
+            },
             
         }],
         grid: {

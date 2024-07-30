@@ -57,8 +57,9 @@
                 <ULink v-if="previewedTrade.imageUrl" :to="previewedTrade.imageUrl" target="_blank" class="cursor-pointer hover:opacity-50 transition">
                     <NuxtImg :src="previewedTrade.imageUrl"/>
                 </ULink>
-                <div v-if="previewedTrade.imageUrl" class="flex flex-col">
+                <div class="flex flex-col">
                     <UButton 
+                        v-if="previewedTrade.imageUrl"
                         @click="() => {
                             if (previewedTrade && previewedTrade.imageUrl) {
                                 clipboard.copy(previewedTrade.imageUrl);
