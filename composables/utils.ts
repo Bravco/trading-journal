@@ -1,4 +1,5 @@
 import { type CollectionReference, type DocumentReference, collection, doc } from "firebase/firestore";
+import { isWithinInterval, isSameDay } from "date-fns";
 
 export const colors: string[] = [
     "gray",
@@ -52,4 +53,24 @@ export const selectedAccountRef = computed<DocumentReference>(() => {
 export const tradesRef = computed<CollectionReference>(() => {
     const firestore = useFirestore();
     return collection(firestore, selectedAccountRef.value.path + "/trades");
+});
+
+export const filteredTrades = computed<Trade[]>(() => {
+    const trades = useTrades();
+    const selectedDateRange = useSelectedDateRange();
+
+    if (selectedDateRange.value) {
+        return trades.value.filter(trade => {
+            const tradeOpen = trade.open.toDate();
+            if (isWithinInterval(tradeOpen, selectedDateRange.value!) 
+                || isSameDay(tradeOpen, selectedDateRange.value!.start)
+                || isSameDay(tradeOpen, selectedDateRange.value!.end)) {
+                    return true;
+            } else return false;
+        })
+    } else return trades.value;
+});
+
+export const totalPnl = computed<number>(() => {
+    return filteredTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0);
 });

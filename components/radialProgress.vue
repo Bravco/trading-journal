@@ -36,7 +36,7 @@
 </template>
 
 <script lang="ts" setup>
-    const props = defineProps({
+    defineProps({
         progressPrimary: {
             type: Number,
             default: 0,

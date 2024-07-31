@@ -32,8 +32,6 @@
 <script lang="ts" setup>
     definePageMeta({ layout: "app" });
 
-    const trades = useTrades();
-
     const cumulativePnlChartOption = computed<ECOption>(() => ({
         xAxis: {
             type: "category",
@@ -99,10 +97,8 @@
         },
     }));
 
-    const totalPnl = computed<number>(() => trades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0)) ?? 0;
-
     const cumulativePnl = computed<{ date: Date, pnl: number }[]>(() => {
-        const sortedTrades = trades.value.sort((a, b) => a.open.toDate().getTime() - b.open.toDate().getTime()) ?? [];
+        const sortedTrades = filteredTrades.value.sort((a, b) => a.open.toDate().getTime() - b.open.toDate().getTime()) ?? [];
         const pnlByDay: { [date: string]: number } = {};
 
         sortedTrades.forEach(trade => {

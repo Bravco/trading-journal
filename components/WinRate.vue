@@ -9,7 +9,7 @@
                     </UTooltip>
                 </div>
                 <UTooltip text="Total number of trades">
-                    <UBadge :label="trades.length ?? 0" variant="solid" color="gray"/>
+                    <UBadge :label="filteredTrades.length ?? 0" variant="solid" color="gray"/>
                 </UTooltip>
             </div>
         </template>
@@ -36,12 +36,10 @@
 </template>
 
 <script lang="ts" setup>
-    const trades = useTrades();
+    const winTrades = computed<any[]>(() => filteredTrades.value.filter(trade => trade.pnl && trade.pnl > 0));
+    const loseTrades = computed<any[]>(() => filteredTrades.value.filter(trade => trade.pnl && trade.pnl < 0));
+    const breakevenTrades = computed<any[]>(() => filteredTrades.value.filter(trade => trade.pnl === 0));
 
-    const winTrades = computed<any[]>(() => trades.value.filter(trade => trade.pnl && trade.pnl > 0));
-    const loseTrades = computed<any[]>(() => trades.value.filter(trade => trade.pnl && trade.pnl < 0));
-    const breakevenTrades = computed<any[]>(() => trades.value.filter(trade => trade.pnl === 0));
-
-    const winRate = computed<number>(() => (winTrades.value.length / trades.value.length) * 100 ?? 0);
-    const breakevenRate = computed<number>(() => (breakevenTrades.value.length / trades.value.length) * 100 ?? 0);
+    const winRate = computed<number>(() => (winTrades.value.length / filteredTrades.value.length) * 100 ?? 0);
+    const breakevenRate = computed<number>(() => (breakevenTrades.value.length / filteredTrades.value.length) * 100 ?? 0);
 </script>

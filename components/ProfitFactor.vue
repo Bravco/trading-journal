@@ -22,10 +22,8 @@
 </template>
 
 <script lang="ts" setup>
-    const trades = useTrades();
-
-    const winTrades = computed<any[]>(() => trades.value.filter(trade => trade.pnl && trade.pnl > 0));
-    const loseTrades = computed<any[]>(() => trades.value.filter(trade => trade.pnl && trade.pnl < 0));
+    const winTrades = computed<any[]>(() => filteredTrades.value.filter(trade => trade.pnl && trade.pnl > 0));
+    const loseTrades = computed<any[]>(() => filteredTrades.value.filter(trade => trade.pnl && trade.pnl < 0));
 
     const grossProfit = computed<number>(() => winTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0));
     const grossLoss = computed<number>(() => loseTrades.value.reduce((acc, trade) => acc + Math.abs(trade.pnl ?? 0), 0));

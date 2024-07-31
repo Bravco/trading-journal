@@ -25,8 +25,6 @@
 </template>
 
 <script lang="ts" setup>
-    const trades = useTrades();
-
     const chart = ref();
 
     const chartOption = computed<ECOption>(() => ({
@@ -62,10 +60,8 @@
         }
     }));
 
-    const totalPnl = computed<number>(() => trades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0)) ?? 0;
-
     const cumulativePnl = computed<number[]>(() => {
-        const sortedTrades = trades.value.sort((a, b) => a.open.toDate().getTime() - b.open.toDate().getTime()) ?? [];
+        const sortedTrades = filteredTrades.value.sort((a, b) => a.open.toDate().getTime() - b.open.toDate().getTime()) ?? [];
         const pnlValues = sortedTrades.map(trade => trade.pnl);
         return pnlValues.reduce((acc: number[], pnl) => {
             if (pnl) {

@@ -43,7 +43,7 @@
                 </template>
             </UTable>
             <div class="flex justify-center sm:justify-end pt-6 border-t border-gray-200 dark:border-gray-700">
-                <UPagination v-model="page" :page-count="tradesPerPage" :total="trades.length ?? 0" :max="3"/>
+                <UPagination v-model="page" :page-count="tradesPerPage" :total="filteredTrades.length ?? 0" :max="3"/>
             </div>
         </UCard>
     </div>
@@ -120,17 +120,13 @@
 
 <script setup lang="ts">
     import { doc, addDoc, deleteDoc, getDoc, updateDoc } from "firebase/firestore";
-    import { isWithinInterval, isSameDay } from "date-fns";
 
     definePageMeta({ layout: "app" });
 
     const clipboard = useCopyToClipboard();
     const toast = useToast();
     const firestore = useFirestore();
-    const trades = useTrades();
     const editedTrade = useEditedTrade();
-    const selectedDateRange = useSelectedDateRange();
-
     const tradesPerPage: number = 10;
     const page = ref<number>(1);
     
@@ -208,19 +204,8 @@
     };
 
     const rows = computed<Trade[]>(() => {
-        if (trades.value) {
-            const { column, direction } = sort.value;
-            const fileteredTrades: Trade[] = selectedDateRange.value
-                ? (trades.value as Trade[]).filter(trade => {
-                    const tradeOpen = trade.open.toDate()
-                    if (isWithinInterval(tradeOpen, selectedDateRange.value!) 
-                        || isSameDay(tradeOpen, selectedDateRange.value!.start)
-                        || isSameDay(tradeOpen, selectedDateRange.value!.end)) {
-                            return true;
-                    } else return false;
-                })
-                : trades.value as Trade[];
-            return useOrderBy(fileteredTrades, column, direction).slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
-        } else return [];
+        const { column, direction } = sort.value;
+        return useOrderBy(filteredTrades.value, column, direction)
+            .slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
     });
 </script>
