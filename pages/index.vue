@@ -1,6 +1,11 @@
 <template>
     <div class="flex flex-col gap-6">
-        <Details/>
+        <div class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-6">
+            <NetPnl/>
+            <WinRate/>
+            <ProfitFactor/>
+            <RealRR/>
+        </div>
         <UCard>
             <UTable :sort="sort" :columns="columns" :rows="rows" :empty-state="{ icon: 'i-heroicons-circle-stack', label: 'No trades' }">
                 <template #open-data="{ row }">

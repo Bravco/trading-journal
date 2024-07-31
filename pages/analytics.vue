@@ -1,15 +1,27 @@
 <template>
     <div class="flex flex-col gap-6">
-        <Details/>
-        <UCard :ui="{ body: { padding: 'px-0 sm:px-0 sm:py-6' } }">
-            <div class="px-4 pb-4 sm:px-6 sm:pb-6">
-                <span :class="['text-3xl', 'font-bold', { 'text-green-500': totalPnl > 0 }, { 'text-red-500': totalPnl < 0 }]">
-                    {{ `${totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)} €` }}
-                </span>
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <WinRate/>
+            <ProfitFactor/>
+            <RealRR/>
+        </div>
+        <UCard :ui="{ body: { padding: 'px-0 sm:px-0' } }">
+            <div class="px-4 sm:px-6">
+                <div class="flex flex-col">
+                    <div class="h-4 md:h-6 flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                        <span class="text-sm font-medium ">Cumulative Net P&L</span>
+                        <UTooltip text="Cumulative total of all profits and losses">
+                            <UIcon name="i-heroicons-information-circle"/>
+                        </UTooltip>
+                    </div>
+                    <span :class="['text-3xl', 'font-medium', { 'text-green-500': totalPnl > 0 }, { 'text-red-500': totalPnl < 0 }]">
+                        {{ `${totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)} €` }}
+                    </span>
+                </div>
             </div>
             <VChart 
                 v-if="cumulativePnl.length > 1"
-                :option="chartOption" 
+                :option="cumulativePnlChartOption" 
                 :autoresize="true"
                 class="h-96"
             />
@@ -22,7 +34,7 @@
 
     const trades = useTrades();
 
-    const chartOption = computed<ECOption>(() => ({
+    const cumulativePnlChartOption = computed<ECOption>(() => ({
         xAxis: {
             type: "category",
             data: cumulativePnl.value.map(obj => obj.date.toDateString()),
@@ -50,15 +62,11 @@
             type: "line",
             smooth: true,
             showSymbol: false,
+            silent: true,
             areaStyle: { opacity: 0.1, color: "rgb(96, 165, 250)" },
             lineStyle: { color: "rgb(96, 165, 250)" },
-            itemStyle: {
-                color: "rgb(96, 165, 250)",
-                emphasis: {
-                    color: "rgb(96, 165, 250)",
-                    borderWidth: 0,
-                },
-            },
+            itemStyle: { color: "rgb(96, 165, 250)" },
+            emphasis: { disabled: true },
             
         }],
         grid: {
@@ -84,7 +92,7 @@
                 return `
                     ${date}<br>
                     <b class="font-bold ${pnl === 0 ? '' : (pnl > 0 ? 'text-green-500' : 'text-red-500')}">
-                        ${pnl.toFixed(2)} €
+                        ${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} €
                     </b>
                 `;
             },
@@ -93,7 +101,7 @@
 
     const totalPnl = computed<number>(() => trades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0)) ?? 0;
 
-    const cumulativePnl = computed<CumulativePnl[]>(() => {
+    const cumulativePnl = computed<{ date: Date, pnl: number }[]>(() => {
         const sortedTrades = trades.value.sort((a, b) => a.open.toDate().getTime() - b.open.toDate().getTime()) ?? [];
         const pnlByDay: { [date: string]: number } = {};
 
