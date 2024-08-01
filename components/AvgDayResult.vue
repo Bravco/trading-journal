@@ -1,11 +1,21 @@
 <template>
     <UCard>
         <template #header>
-            <div class="h-4 md:h-6 flex items-center gap-2 text-gray-500 dark:text-gray-400">
-                <span class="text-sm font-medium">Average Day Result</span>
-                <UTooltip text="Average profit and loss for corresponding day">
-                    <UIcon name="i-heroicons-information-circle"/>
-                </UTooltip>
+            <div class="h-4 md:h-6 flex justify-between items-center">
+                <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                    <span class="text-sm font-medium">Average Day Result</span>
+                    <UTooltip text="Average profit and loss for corresponding day">
+                        <UIcon name="i-heroicons-information-circle"/>
+                    </UTooltip>
+                </div>
+                <div class="flex gap-2">
+                    <UTooltip text="Your best performing day on average">
+                        <UBadge :label="bestDayLabel" variant="subtle" color="green"/>
+                    </UTooltip>
+                    <UTooltip text="Your worst performing day on average">
+                        <UBadge :label="worstDayLabel" variant="subtle" color="red"/>
+                    </UTooltip>
+                </div>
             </div>
         </template>
         <VChart 
@@ -108,5 +118,25 @@
             profit: day.profitCount > 0 ? day.profit / day.profitCount : 0,
             loss: day.lossCount > 0 ? day.loss / day.lossCount : 0,
         }));
+    });
+
+    const bestDayLabel = computed<string>(() => {
+        return avgResult.value.reduce((label: string, next) => {
+            const current = avgResult.value.find(day => day.label === label);
+            if (!current) return next.label;
+            const currentValue = current.profit + current.loss;
+            const nextValue = next.profit + next.loss;
+            return currentValue > nextValue ? current.label : next.label;
+        }, avgResult.value[0].label);
+    });
+    
+    const worstDayLabel = computed<string>(() => {
+        return avgResult.value.reduce((label: string, next) => {
+            const current = avgResult.value.find(day => day.label === label);
+            if (!current) return next.label;
+            const currentValue = current.profit + current.loss;
+            const nextValue = next.profit + next.loss;
+            return currentValue > nextValue ? next.label : current.label;
+        }, avgResult.value[0].label);
     });
 </script>
