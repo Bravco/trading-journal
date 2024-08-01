@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     icons: ["heroicons", "logos", "eos-icons"],
   },
   echarts: {
-    charts: ["LineChart"],
+    charts: ["LineChart", "BarChart"],
     components: ["GridComponent", "TooltipComponent"],
   },
   vuefire: {
