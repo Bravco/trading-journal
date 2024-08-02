@@ -16,7 +16,7 @@
             <UBadge v-else-if="profitFactor <= 3" label="Good" variant="subtle" size="lg" color="green"/>
             <UBadge v-else-if="profitFactor <= 4" label="Great" variant="subtle" size="lg" color="green"/>
             <UBadge v-else-if="profitFactor > 4" label="Excellent" variant="subtle" size="lg" color="green"/>
-            <UBadge v-else label="None" variant="subtle" size="lg" color="gray"/>
+            <UBadge v-else label="None" variant="solid" size="lg" color="gray"/>
         </div>
     </UCard>
 </template>
