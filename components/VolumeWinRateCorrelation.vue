@@ -3,7 +3,7 @@
         <template #header>
             <div class="h-4 md:h-6 flex items-center gap-2 text-gray-500 dark:text-gray-400">
                 <span class="text-sm font-medium">Volume & Win Rate Correlation</span>
-                <UTooltip text="Correlation between time-based volume and win rate">
+                <UTooltip text="Time-based correlation between volume and win rate">
                     <UIcon name="i-heroicons-information-circle"/>
                 </UTooltip>
             </div>
