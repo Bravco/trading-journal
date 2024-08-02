@@ -15,7 +15,7 @@
         </div>
         <VChart 
             v-if="cumulativePnl.length > 1"
-            :option="cumulativePnlChartOption" 
+            :option="chartOption" 
             :autoresize="true"
             class="h-96"
         />
@@ -23,7 +23,7 @@
 </template>
 
 <script lang="ts" setup>
-    const cumulativePnlChartOption = computed<ECOption>(() => ({
+    const chartOption = computed<ECOption>(() => ({
         xAxis: {
             type: "category",
             data: cumulativePnl.value.map(obj => obj.date.toDateString()),
@@ -81,9 +81,9 @@
                 const pnl = params[0].value;
                 return `
                     ${date}<br>
-                    <b class="font-bold ${pnl === 0 ? '' : (pnl > 0 ? 'text-green-500' : 'text-red-500')}">
+                    <span class="font-bold ${pnl === 0 ? '' : (pnl > 0 ? 'text-green-500' : 'text-red-500')}">
                         ${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} €
-                    </b>
+                    </span>
                 `;
             },
         },
