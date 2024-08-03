@@ -84,7 +84,7 @@
 <script lang="ts" setup>
     import { object, string } from "yup";
     import { signOut } from "firebase/auth";
-    import { collection, addDoc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
+    import { collection, doc, addDoc, updateDoc, getDoc, deleteDoc } from "firebase/firestore";
 
     const isAddAccountModalOpen = useIsAddAccountModalOpen();
     const isManageAccountsModalOpen = ref<boolean>(false);
@@ -185,7 +185,8 @@
 
     async function onManageAccountsSubmit() {
         manageAccountState.value.map((account: any) => {
-            getDoc(selectedAccountRef.value).then(snapshot => {
+            const accountRef = doc(firestore, `users/${user.value!.uid}/accounts/${account.id}`);
+            getDoc(accountRef).then(snapshot => {
                 if (account.delete === true) {
                     deleteDoc(snapshot.ref);
                     selectedAccountId.value = null;

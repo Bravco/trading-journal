@@ -71,6 +71,8 @@ export const filteredTrades = computed<Trade[]>(() => {
     } else return trades.value;
 });
 
-export const totalPnl = computed<number>(() => {
-    return filteredTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0);
-});
+export const totalPnl = computed<number>(() => 
+    filteredTrades.value.reduce((acc, trade) => acc + (trade.pnl ?? 0), 0));
+
+export const RMultiple = computed<number>(() => 
+    filteredTrades.value.reduce((acc, trade) => acc + (trade.pnl && trade.risk ? trade.pnl/trade.risk : 0), 0));

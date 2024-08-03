@@ -8,9 +8,12 @@
                 </UTooltip>
             </div>
         </template>
-        <div class="h-16 md:h-24 flex justify-between items-center gap-4 sm:gap-8">
+        <div class="h-16 md:h-24 flex flex-col justify-center gap-1">
             <span :class="['text-3xl', 'font-medium', { 'text-green-500': totalPnl > 0 }, { 'text-red-500': totalPnl < 0 }]">
                 {{ `${totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)} €` }}
+            </span>
+            <span :class="['text-xl', 'font-medium', { 'text-green-500': RMultiple > 0 }, { 'text-red-500': RMultiple < 0 }]">
+                {{ `${RMultiple >= 0 ? "+" : ""}${RMultiple.toFixed(2)} R` }}
             </span>
         </div>
         <VChart 

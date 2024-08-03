@@ -59,7 +59,7 @@
                 <main class="p-4">
                     <slot v-if="selectedAccount"/>
                     <div v-else class="grid place-items-center gap-2">
-                        <p>You have no trading accounts</p>
+                        <p>You have no trading account or none selected</p>
                         <UButton @click="isAddAccountModalOpen = true" label="Add a trading account" icon="i-heroicons-user-plus"/>
                     </div>
                 </main>

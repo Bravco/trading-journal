@@ -19,6 +19,12 @@
             :autoresize="true"
             class="h-96"
         />
+        <div v-else class="h-96 grid place-items-center">
+            <div class="grid place-items-center">
+                <UIcon class="w-6 h-6 text-gray-400 dark:text-gray-500 mb-4" name="i-heroicons-circle-stack"/>
+                <span class="text-sm">Need more data</span>
+            </div>
+        </div>
     </UCard>
 </template>
 
