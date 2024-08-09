@@ -35,7 +35,7 @@
 
 <script lang="ts" setup>
     import { object, string } from "yup";
-    import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendEmailVerification } from "firebase/auth";
+    import { createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendEmailVerification, sendPasswordResetEmail, confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
     import type { UserCredential } from "firebase/auth";
     import { collection, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 
@@ -87,7 +87,8 @@
         createUserWithEmailAndPassword(auth, signUpState.email, signUpState.password).then(credential => {
             saveUserData(credential);
             sendEmailVerification(credential.user);
-            toast.add({ title: "Verification email was sent to your email address", icon: "i-heroicons-information-circle", color: "green", })            
+            toast.add({ title: "Verification email was sent to your email address", icon: "i-heroicons-information-circle", color: "green", });
+            loading.value = false;
         }).catch(error => {
             let message = null;
 
@@ -102,9 +103,8 @@
             }
 
             toast.add({ title: message, icon: "i-heroicons-exclamation-triangle", color: "red" });
+            loading.value = false;
        });
-
-       loading.value = false;
     }
     
     async function signIn() {
@@ -112,6 +112,7 @@
 
         signInWithEmailAndPassword(auth, signInState.email, signInState.password).then(credential => {
             saveUserData(credential);
+            loading.value = false;
         }).catch(error => {
             let message = null;
 
@@ -126,9 +127,8 @@
             }
 
             toast.add({ title: message, icon: "i-heroicons-exclamation-triangle", color: "red" });
+            loading.value = false;
         });
-
-        loading.value = false;
     }
 
     async function googleSignIn() {
@@ -136,11 +136,11 @@
 
         signInWithPopup(auth, googleAuthProvider).then(credential => {
             saveUserData(credential);
+            loading.value = false;
         }).catch(() => {
             toast.add({ title: "Something went wrong", icon: "i-heroicons-exclamation-triangle", color: "red" });
+            loading.value = false;
         });
-
-        loading.value = false;
     }
 
     function saveUserData(credential: UserCredential) {
