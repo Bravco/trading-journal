@@ -98,23 +98,35 @@
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <UFormGroup label="Risk Reward" name="rr">
-                        <UInput v-model="state.rr" type="decimal" min="0"/>
+                        <UInput v-model="state.rr" type="decimal" min="0" placeholder="0.00"/>
                     </UFormGroup>
                     <UFormGroup label="Original Risk" name="risk">
-                        <UInput v-model="state.risk" type="decimal" min="0"/>
+                        <UInput v-model="state.risk" type="decimal" min="0" placeholder="0.00">
+                            <template #trailing>
+                                <span class="text-gray-500 dark:text-gray-400 text-xs">EUR</span>
+                            </template> 
+                        </UInput>
                     </UFormGroup>
                     <UFormGroup label="Net P&L" name="pnl">
-                        <UInput v-model="state.pnl" type="decimal"/>
+                        <UInput v-model="state.pnl" type="decimal" placeholder="0.00">
+                            <template #trailing>
+                                <span class="text-gray-500 dark:text-gray-400 text-xs">EUR</span>
+                            </template>
+                        </UInput>
                     </UFormGroup>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <UFormGroup label="Image Url" name="imageUrl">
-                        <UInput v-model="state.imageUrl" type="text"/>
+                        <UInput v-model="state.imageUrl" type="text" placeholder="https://..."/>
                     </UFormGroup>
                     <UFormGroup label="Strategy" name="strategy">
                         <UInput v-model="state.strategy" type="text">
                             <template #trailing>
-                                <UDropdown :items="strategyOptions" class="pointer-events-auto">
+                                <UDropdown 
+                                    v-if="strategyOptions[0].length !== 0" 
+                                    :items="strategyOptions" 
+                                    class="pointer-events-auto"
+                                >
                                     <UIcon name="i-heroicons-chevron-down "/>
                                 </UDropdown>
                             </template>
@@ -135,7 +147,12 @@
                     <div class="flex items-center justify-between gap-2">
                         <UInput @keydown.enter="pushNewTag" v-model="state.tagLabel" type="text" class="w-full">
                             <template #trailing>
-                                <UDropdown :items="tagOptions" class="pointer-events-auto" :ui="{ width: 'w-fit' }">
+                                <UDropdown 
+                                    v-if="tagOptions[0].length !== 0" 
+                                    :items="tagOptions" 
+                                    class="pointer-events-auto" 
+                                    :ui="{ width: 'w-fit' }"
+                                >
                                     <UIcon name="i-heroicons-chevron-down "/>
                                     <template v-for="color in colors" #[color]="{ item: tag }">
                                         <UBadge :label="tag.label" :color="color" variant="subtle"/>
@@ -143,7 +160,7 @@
                                 </UDropdown>
                             </template>
                         </UInput>
-                        <UDropdown :ui="{ width: 'w-fit', padding: 'grid grid-cols-5' }" :items="colorOptions">
+                        <UDropdown :items="colorOptions" :ui="{ width: 'w-fit', padding: 'grid grid-cols-5' }">
                             <UButton icon="i-heroicons-swatch" variant="ghost" :color="state.tagColor ?? 'gray'"/>
                             <template v-for="color in colors" #[color]="{}">
                                 <UTooltip :text="color" class="capitalize">
@@ -195,9 +212,9 @@
         open: date().required("Open Date is required"),
         symbol: string().required("Symbol is required"),
         strategy: string().nullable(),
-        risk: number().nullable().positive("Original Risk must be a positive number"),
-        rr: number().nullable().positive("Risk Reward must be a positive number"),
-        pnl: number().nullable(),
+        risk: number().transform(value => Number.isNaN(value) ? null : value).nullable().positive("Original Risk must be a positive number"),
+        rr: number().transform(value => Number.isNaN(value) ? null : value).nullable().positive("Risk Reward must be a positive number"),
+        pnl: number().transform(value => Number.isNaN(value) ? null : value).nullable(),
         imageUrl: string().nullable().url("Image Url must be a valid URL"),
         note: string().nullable(),
         tagLabel: string(),
