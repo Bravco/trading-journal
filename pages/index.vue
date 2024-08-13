@@ -7,6 +7,9 @@
             <RealRR/>
         </div>
         <UCard>
+            <div class="flex pb-3.5 border-b border-gray-200 dark:border-gray-700">
+                <USelectMenu v-model="selectedColumns" :options="columnOptions" multiple placeholder="Columns" class="w-full sm:max-w-48"/>
+            </div>
             <UTable :sort="sort" :columns="columns" :rows="rows" :empty-state="{ icon: 'i-heroicons-circle-stack', label: 'No trades' }">
                 <template #open-data="{ row }">
                     <span>{{ `${row.open.toDate().toDateString()} ${row.open.toDate().toLocaleTimeString([], { timeStyle: "short" })}` }}</span>
@@ -138,7 +141,7 @@
         direction: "desc",
     });
 
-    const columns = [
+    const columnOptions = [
         { key: "open", label: "Open Date", sortable: true },
         { key: "symbol", label: "Symbol" },
         { key: "strategy", label: "Strategy" },
@@ -146,8 +149,18 @@
         { key: "risk", label: "Original Risk", sortable: true },
         { key: "pnl", label: "Net P&L", sortable: true },
         { key: "status", label: "Status" },
-        { key: "actions" },
     ];
+
+    const selectedColumns = ref([...columnOptions]);
+
+    const columns = computed(() => [
+        ...selectedColumns.value.slice().sort((a, b) => {
+            const indexA = columnOptions.findIndex(option => option.key === a.key);
+            const indexB = columnOptions.findIndex(option => option.key === b.key);
+            return indexA - indexB;
+        }),
+        { key: "actions" },
+    ]);
 
     const tradeActions = (trade: Trade) => {
         return [
