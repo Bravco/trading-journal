@@ -263,9 +263,11 @@
     }
 
     const strategyOptions = computed<any>(() => {
-        const strategies = Array.from(new Set(
-            trades.value.flatMap(trade => trade.strategy).filter((strategy): strategy is string => strategy !== null)
-        )).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+        const strategies: string[] = trades.value
+            .flatMap(trade => trade.strategy)
+            .filter((strategy): strategy is string => strategy !== null)
+            .filter((strategy, i, self) => self.indexOf(strategy) === i)
+            .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 
         return [strategies.map(strategy => ({
             label: strategy,
@@ -274,8 +276,8 @@
     });
 
     const tagOptions = computed<any[]>(() => {
-        const tags = Array.from(new Set(trades.value.flatMap(trade => trade.tags.map((tag: Tag) => JSON.stringify(tag)))))
-            .map(tagStr => JSON.parse(tagStr))
+        const tags: Tag[] = trades.value.flatMap(trade => trade.tags)
+            .filter((tag, index, self) => index === self.findIndex(t => t.label === tag.label && t.color === tag.color))
             .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
 
         return [tags.map(tag => ({
