@@ -7,7 +7,14 @@
             <RealRR/>
         </div>
         <UCard>
-            <div class="flex pb-3.5 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex gap-2 pb-3.5 border-b border-gray-200 dark:border-gray-700">
+                <UButton
+                    @click="isColumnModalOpen = true"
+                    icon="i-heroicons-cog-6-tooth"
+                    variant="solid"
+                    color="gray"
+                    square
+                />
                 <USelectMenu v-model="selectedColumns" :options="columnOptions" multiple placeholder="Columns" class="w-full sm:max-w-48"/>
             </div>
             <UTable :sort="sort" :columns="columns" :rows="rows" :empty-state="{ icon: 'i-heroicons-circle-stack', label: 'No trades' }">
@@ -119,6 +126,68 @@
             </template>
         </UCard>
     </USlideover>
+    <UModal v-model="isColumnModalOpen">
+        <UCard>
+            <template #header>
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center gap-2">
+                        <UIcon name="i-heroicons-cog-6-tooth"/>
+                        <h1 class="text-lg font-medium">Manage Columns</h1>
+                    </div>
+                    <UButton @click="isColumnModalOpen = false" icon="i-heroicons-x-mark" variant="ghost" color="gray"/>
+                </div>
+            </template>
+            <div class="grid gap-4" style="grid-template-columns: 1fr 1px 2fr;">
+                <UForm class="space-y-4">
+                    <div class="flex items-center gap-2">
+                        <UIcon name="i-heroicons-folder-plus"/>
+                        <h2 class="text-md font-medium">New Column</h2>
+                    </div>
+                    <UFormGroup label="Title" name="title" required>
+                        <UInput type="text"/>
+                    </UFormGroup>
+                    <UFormGroup label="Type" name="type" required>
+                        <USelectMenu :options="['Text', 'Number', 'Checkbox']"/>
+                    </UFormGroup>
+                    <UButton type="submit" label="Add" icon="i-heroicons-plus"/>
+                </UForm>
+                <UDivider orientation="vertical"/>
+                <div class="flex flex-col gap-2">
+                    <h2 class="text-md font-medium">Default</h2>
+                    <ul class="flex flex-wrap gap-2">
+                        <li>
+                            <UCheckbox label="Open Date"/>
+                        </li>
+                        <li>
+                            <UCheckbox label="Symbol"/>
+                        </li>
+                        <li>
+                            <UCheckbox label="Strategy"/>
+                        </li>
+                        <li>
+                            <UCheckbox label="Risk Reward"/>
+                        </li>
+                        <li>
+                            <UCheckbox label="Original Risk"/>
+                        </li>
+                        <li>
+                            <UCheckbox label="Net P&L"/>
+                        </li>
+                        <li>
+                            <UCheckbox label="Status"/>
+                        </li>
+                    </ul>
+                    <UDivider/>
+                    <h2 class="text-md font-medium">Custom</h2>
+                    <ul class="flex flex-wrap gap-2">
+                        <li>
+                            <UCheckbox label="Target Risk Reward"/>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </UCard>
+    </UModal>
 </template>
 
 <script setup lang="ts">
@@ -135,6 +204,7 @@
     
     const previewedTrade = ref<Trade | null>(null);
     const isSlideoverOpen = ref<boolean>(false);
+    const isColumnModalOpen = ref<boolean>(false);
 
     const sort = ref<{ column: keyof Trade; direction: "asc" | "desc" }>({
         column: "open",
