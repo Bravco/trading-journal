@@ -138,16 +138,16 @@
                 </div>
             </template>
             <div class="grid gap-4" style="grid-template-columns: 1fr 1px 2fr;">
-                <UForm class="space-y-4">
+                <UForm @submit="onAddColumnSubmit" :schema="addColumnSchema" :state="addColumnState" class="space-y-4">
                     <div class="flex items-center gap-2">
                         <UIcon name="i-heroicons-folder-plus"/>
                         <h2 class="text-md font-medium">New Column</h2>
                     </div>
                     <UFormGroup label="Title" name="title" required>
-                        <UInput type="text"/>
+                        <UInput v-model="addColumnState.title" type="text"/>
                     </UFormGroup>
                     <UFormGroup label="Type" name="type" required>
-                        <USelectMenu :options="['Text', 'Number', 'Checkbox']"/>
+                        <USelectMenu v-model="addColumnState.type" :options="['Text', 'Number', 'Checkbox']"/>
                     </UFormGroup>
                     <UButton type="submit" label="Add" icon="i-heroicons-plus"/>
                 </UForm>
@@ -180,8 +180,8 @@
                     <UDivider/>
                     <h2 class="text-md font-medium">Custom</h2>
                     <ul class="flex flex-wrap gap-2">
-                        <li>
-                            <UCheckbox label="Target Risk Reward"/>
+                        <li v-for="customField in customFields">
+                            <UCheckbox :label="customField.title"/>
                         </li>
                     </ul>
                 </div>
@@ -191,6 +191,7 @@
 </template>
 
 <script setup lang="ts">
+    import { object, string } from "yup";
     import { doc, addDoc, deleteDoc, getDoc, updateDoc } from "firebase/firestore";
 
     definePageMeta({ layout: "app" });
@@ -205,6 +206,17 @@
     const previewedTrade = ref<Trade | null>(null);
     const isSlideoverOpen = ref<boolean>(false);
     const isColumnModalOpen = ref<boolean>(false);
+
+    const addColumnSchema = object({
+        title: string().required("Title is required"),
+        type: string().required("Type is required"),
+    });
+
+    const addColumnInitialState: any = { title: undefined, type: undefined };
+    
+    const addColumnState = reactive<any>({ ...addColumnInitialState });
+
+    const customFields = ref<{ title: string, type: string }[]>([]);
 
     const sort = ref<{ column: keyof Trade; direction: "asc" | "desc" }>({
         column: "open",
@@ -291,4 +303,13 @@
         return useOrderBy(filteredTrades.value, column, direction)
             .slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
     });
+
+    async function onAddColumnSubmit() {
+        customFields.value.push({
+            title: addColumnState.title,
+            type: addColumnState.type,
+        });
+        
+        Object.assign(addColumnState, { ...addColumnInitialState });
+    }
 </script>
