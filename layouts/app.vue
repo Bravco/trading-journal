@@ -276,7 +276,7 @@
     });
 
     const tagOptions = computed<any[]>(() => {
-        const tags: Tag[] = trades.value.flatMap(trade => trade.tags)
+        const tags: Tag[] = trades.value.flatMap(trade => trade.tags ? trade.tags : [])
             .filter((tag, index, self) => index === self.findIndex(t => t.label === tag.label && t.color === tag.color))
             .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
 

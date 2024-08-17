@@ -11,11 +11,20 @@ declare global {
         imageUrl?: string | null,
         strategy?: string | null,
         note?: string | null,
-        tags: Tag[],
-    }
+        tags?: Tag[] | null,
+    };
 
     type Tag = {
         label: string,
         color: string,
-    }
+    };
+
+    type Field = {
+        label: string,
+        active: boolean,
+    };
+
+    type CustomField = Field & {
+        type: string,
+    };
 }
