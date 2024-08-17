@@ -88,7 +88,7 @@
                 </div>
             </template>
             <UForm @submit="onSubmit" @keydown.enter="$event.preventDefault()" :schema="schema" :state="state" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid sm:grid-flow-col auto-cols-fr gap-4">
                     <UFormGroup label="Open Date" name="open" required>
                         <UInput v-model="state.open" type="datetime-local"/>
                     </UFormGroup>
@@ -96,7 +96,7 @@
                         <UInput v-model="state.symbol" type="text"/>
                     </UFormGroup>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="grid sm:grid-flow-col auto-cols-fr gap-4">
                     <UFormGroup label="Risk Reward" name="rr">
                         <UInput v-model="state.rr" type="decimal" min="0" placeholder="0.00"/>
                     </UFormGroup>
@@ -115,7 +115,7 @@
                         </UInput>
                     </UFormGroup>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid sm:grid-flow-col auto-cols-fr gap-4">
                     <UFormGroup label="Image Url" name="imageUrl">
                         <UInput v-model="state.imageUrl" type="text" placeholder="https://..."/>
                     </UFormGroup>
@@ -183,7 +183,15 @@
                         </UBadge>
                     </div>
                 </UFormGroup>
-                <UDivider/>
+                <div v-if="customFields.length > 0" class="space-y-4">
+                    <UDivider/>
+                    <h2 class="text-md font-medium">Custom</h2>
+                    <div :class="['grid', 'grid-cols-1', 'gap-x-4', 'gap-y-2', { 'sm:grid-cols-2': customFields.length > 1 }]">
+                        <UFormGroup v-for="customField in customFields" :label="customField.label" :name="customField.label.toLowerCase()">
+                            <UInput :type="customField.type"/>
+                        </UFormGroup>
+                    </div>
+                </div>
                 <UButton 
                     type="submit" 
                     :label="editedTrade === null ? 'Create' : 'Save'" 
@@ -205,6 +213,7 @@
     const selectedAccount = useSelectedAccount();
     const trades = useTrades();
     const editedTrade = useEditedTrade();
+    const customFields = useCustomFields();
     const isAddAccountModalOpen = useIsAddAccountModalOpen();
     const selectedDateRange = useSelectedDateRange();
     

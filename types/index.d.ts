@@ -19,12 +19,9 @@ declare global {
         color: string,
     };
 
-    type Field = {
+    type CustomField = {
         label: string,
-        active: boolean,
-    };
-
-    type CustomField = Field & {
         type: string,
+        active: boolean,
     };
 }

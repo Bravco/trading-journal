@@ -126,64 +126,10 @@
             </template>
         </UCard>
     </USlideover>
-    <UModal v-model="isFieldModalOpen">
-        <UCard>
-            <template #header>
-                <div class="flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <UIcon name="i-heroicons-cog-6-tooth"/>
-                        <h1 class="text-lg font-medium">Manage Fields</h1>
-                    </div>
-                    <UButton @click="isFieldModalOpen = false" icon="i-heroicons-x-mark" variant="ghost" color="gray"/>
-                </div>
-            </template>
-            <div class="grid gap-4" style="grid-template-columns: 1fr 1px 2fr;">
-                <UForm @submit="onAddFieldSubmit" :schema="addFieldSchema" :state="addFieldState" class="space-y-4">
-                    <div class="flex items-center gap-2">
-                        <UIcon name="i-heroicons-folder-plus"/>
-                        <h2 class="text-md font-medium">New Field</h2>
-                    </div>
-                    <UFormGroup label="Label" name="label" required>
-                        <UInput v-model="addFieldState.label" type="text"/>
-                    </UFormGroup>
-                    <UFormGroup label="Type" name="type" required>
-                        <USelectMenu
-                            v-model="addFieldState.type"
-                            value-attribute="value"
-                            option-attribute="label"
-                            :options="fieldTypeOptions"
-                        />
-                    </UFormGroup>
-                    <UButton type="submit" label="Add" icon="i-heroicons-plus"/>
-                </UForm>
-                <UDivider orientation="vertical"/>
-                <div class="flex flex-col gap-2">
-                    <div class="flex items-center gap-2">
-                        <h2 class="text-md font-medium">Default</h2>
-                        <UTooltip text="Note that analytics are calculated with default fields">
-                            <UIcon name="i-heroicons-information-circle"/>
-                        </UTooltip>
-                    </div>
-                    <ul class="flex flex-wrap gap-2">
-                        <li v-for="field in fields">
-                            <UCheckbox v-model="field.active" :label="field.label"/>
-                        </li>
-                    </ul>
-                    <UDivider/>
-                    <h2 class="text-md font-medium">Custom</h2>
-                    <ul class="flex flex-wrap gap-2">
-                        <li v-for="customField in customFields">
-                            <UCheckbox :label="customField.label"/>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </UCard>
-    </UModal>
+    <FieldModal/>
 </template>
 
 <script setup lang="ts">
-    import { object, string } from "yup";
     import { doc, addDoc, deleteDoc, getDoc, updateDoc } from "firebase/firestore";
 
     definePageMeta({ layout: "app" });
@@ -191,42 +137,13 @@
     const clipboard = useCopyToClipboard();
     const toast = useToast();
     const firestore = useFirestore();
+    const isFieldModalOpen = useIsFieldModalOpen();
     const editedTrade = useEditedTrade();
     const tradesPerPage: number = 10;
     const page = ref<number>(1);
     
     const previewedTrade = ref<Trade | null>(null);
     const isSlideoverOpen = ref<boolean>(false);
-    const isFieldModalOpen = ref<boolean>(false);
-
-    const fields = ref<Field[]>([
-        { label: "Open Date", active: true },
-        { label: "Symbol", active: true },
-        { label: "Risk Reward", active: true },
-        { label: "Original Risk", active: true },
-        { label: "Net P&L", active: true },
-        { label: "Image Url", active: true },
-        { label: "Strategy", active: true },
-        { label: "Note", active: true },
-        { label: "Tags", active: true },
-    ]);
-
-    const customFields = ref<CustomField[]>([]);
-
-    const fieldTypeOptions = [
-        { label: "Text", value: "string" },
-        { label: "Number", value: "number" },
-        { label: "Checkbox", value: "boolean" },
-    ];
-
-    const addFieldSchema = object({
-        label: string().required("Label is required"),
-        type: string().required("Type is required"),
-    });
-
-    const addFieldInitialState: any = { label: undefined, type: undefined };
-    
-    const addFieldState = reactive<any>({ ...addFieldInitialState });
 
     const sort = ref<{ column: keyof Trade; direction: "asc" | "desc" }>({
         column: "open",
@@ -313,14 +230,4 @@
         return useOrderBy(filteredTrades.value, column, direction)
             .slice((page.value - 1) * tradesPerPage, (page.value) * tradesPerPage);
     });
-
-    async function onAddFieldSubmit() {
-        customFields.value.push({
-            label: addFieldState.label,
-            type: addFieldState.type,
-            active: true,
-        });
-        
-        Object.assign(addFieldState, { ...addFieldInitialState });
-    }
 </script>
