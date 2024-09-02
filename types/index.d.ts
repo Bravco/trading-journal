@@ -20,6 +20,7 @@ declare global {
     };
 
     type CustomField = {
+        id: string,
         label: string,
         type: string,
     };

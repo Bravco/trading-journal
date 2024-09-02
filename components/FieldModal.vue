@@ -15,7 +15,7 @@
                     <div class="flex items-center justify-between gap-2">
                         <h2 class="text-md font-medium">
                             {{ editMode ? 
-                                (editedFieldIndex === null ? 'Pick Field' : 'Edit Field') 
+                                (editedCustomFieldId === null ? 'Pick Field' : 'Edit Field') 
                                 : 'New Field' }}
                         </h2>
                         <UButton 
@@ -26,7 +26,7 @@
                         />
                     </div>
                     <UFormGroup label="Label" name="label" required>
-                        <UInput v-model="state.label" type="text" :disabled="editMode && editedFieldIndex === null"/>
+                        <UInput v-model="state.label" type="text" :disabled="editMode && editedCustomFieldId === null"/>
                     </UFormGroup>
                     <UFormGroup label="Type" name="type" required>
                         <USelectMenu
@@ -34,24 +34,24 @@
                             value-attribute="value"
                             option-attribute="label"
                             :options="typeOptions"
-                            :disabled="editMode && editedFieldIndex === null"
+                            :disabled="editMode"
                         />
                     </UFormGroup>
                     <UButton 
                         type="submit" 
                         :label="editMode ? 'Save' : 'Add'" 
                         :icon="editMode ? 'i-heroicons-check' : 'i-heroicons-plus'" 
-                        :disabled="editMode && editedFieldIndex === null"
+                        :disabled="editMode && editedCustomFieldId === null"
                     />
                 </UForm>
                 <UDivider orientation="vertical"/>
                 <div v-if="editMode" class="flex flex-col gap-2">
                     <h2 class="text-md font-medium">Custom</h2>
                     <ul v-if="customFields.length > 0" class="flex flex-wrap gap-2">
-                        <li v-for="(customField, index) in customFields">
+                        <li v-for="customField in customFields">
                             <UBadge
-                                @click="selectEditedFieldIndex(index)"
-                                :color="editedFieldIndex === index ? 'primary' : 'gray'"
+                                @click="selectEditedFieldId(customField.id)"
+                                :color="editedCustomFieldId === customField.id ? 'primary' : 'gray'"
                                 :label="customField.label"
                                 variant="solid"
                                 class="cursor-pointer"
@@ -94,12 +94,14 @@
 
 <script lang="ts" setup>
     import { object, string } from "yup";
+    import { addDoc, updateDoc, getDoc, doc } from "firebase/firestore";
 
+    const firestore = useFirestore();
     const customFields = useCustomFields();
     const isFieldModalOpen = useIsFieldModalOpen();
 
     const editMode = ref<boolean>(false);
-    const editedFieldIndex = ref<number | null>(null);
+    const editedCustomFieldId = ref<string | null>(null);
 
     const initialState: any = { label: undefined, type: undefined };
     
@@ -116,7 +118,7 @@
     });
 
     function resetForm() {
-        editedFieldIndex.value = null;
+        editedCustomFieldId.value = null;
         Object.assign(state, { ...initialState });
     }
 
@@ -125,29 +127,33 @@
         resetForm();
     }
 
-    function selectEditedFieldIndex(index: number) {
-        if (editedFieldIndex.value === index) {
-            editedFieldIndex.value = null;
+    function selectEditedFieldId(id: string) {
+        if (editedCustomFieldId.value === id) {
+            editedCustomFieldId.value = null;
             Object.assign(state, { ...initialState });
         } else {
-            editedFieldIndex.value = index;
-            Object.assign(state, {
-                label: customFields.value[index].label,
-                type: customFields.value[index].type,
+            editedCustomFieldId.value = id;
+            getDoc(doc(firestore, `${customFieldsRef.value.path}/${id}`)).then(snapshot => {
+                const customField: CustomField = snapshot.data() as CustomField;
+                Object.assign(state, {
+                    label: customField.label,
+                    type: customField.type,
+                });
             });
         }
     }
 
     async function onSubmit() {
-        if (editMode && editedFieldIndex.value !== null) {
-            customFields.value[editedFieldIndex.value] = {
-                label: state.label,
-                type: state.type,
-            };
+        const newCustomField: Omit<CustomField, "id"> = {
+            label: state.label,
+            type: state.type,
+        };
+
+        if (editMode && editedCustomFieldId.value !== null) {
+            updateDoc(doc(firestore, `${customFieldsRef.value.path}/${editedCustomFieldId.value}`), newCustomField);
         } else {
-            customFields.value.push({
-                label: state.label,
-                type: state.type,
+            addDoc(customFieldsRef.value, newCustomField).then(customFieldRef => {
+                updateDoc(customFieldRef, { id: customFieldRef.id });
             });
         }
 

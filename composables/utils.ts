@@ -1,4 +1,4 @@
-import { type CollectionReference, type DocumentReference, collection, doc } from "firebase/firestore";
+import { CollectionReference, type DocumentReference, collection, doc } from "firebase/firestore";
 import { isWithinInterval, isSameDay } from "date-fns";
 
 export const colors: string[] = [
@@ -53,6 +53,12 @@ export const selectedAccountRef = computed<DocumentReference>(() => {
 export const tradesRef = computed<CollectionReference>(() => {
     const firestore = useFirestore();
     return collection(firestore, selectedAccountRef.value.path + "/trades");
+});
+
+export const customFieldsRef = computed<CollectionReference>(() => {
+    const user = useCurrentUser();
+    const firestore = useFirestore();
+    return collection(firestore, `users/${user.value!.uid}/customFields`);
 });
 
 export const filteredTrades = computed<Trade[]>(() => {

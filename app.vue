@@ -14,14 +14,17 @@
     const selectedAccountId = useSelectedAccountId();
     const selectedAccount = useSelectedAccount();
     const trades = useTrades();
+    const customFields = useCustomFields();
 
     watch(selectedAccountId, async () => {
         if (selectedAccountId.value) {
             selectedAccount.value = (await getDoc(selectedAccountRef.value)).data();
             onSnapshot(tradesRef.value, snapshot => trades.value = [...snapshot.docs.map(doc => doc.data())] as Trade[]);
+            onSnapshot(customFieldsRef.value, snapshot => customFields.value = [...snapshot.docs.map(doc => doc.data())] as CustomField[]);
         } else {
             selectedAccount.value = null;
             trades.value = [];
+            customFields.value = [];
         }
     });
 
