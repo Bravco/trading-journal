@@ -22,6 +22,5 @@ declare global {
     type CustomField = {
         label: string,
         type: string,
-        active: boolean,
     };
 }

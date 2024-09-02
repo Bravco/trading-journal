@@ -15,7 +15,7 @@
                     <div class="flex items-center justify-between gap-2">
                         <h2 class="text-md font-medium">
                             {{ editMode ? 
-                                (editedFieldIndex === null ? 'Pick Field' : customFields[editedFieldIndex].label) 
+                                (editedFieldIndex === null ? 'Pick Field' : 'Edit Field') 
                                 : 'New Field' }}
                         </h2>
                         <UButton 
@@ -51,7 +51,7 @@
                         <li v-for="(customField, index) in customFields">
                             <UBadge
                                 @click="selectEditedFieldIndex(index)"
-                                :color="(editedFieldIndex !== null && customField === customFields[editedFieldIndex]) ? 'primary' : 'gray'"
+                                :color="editedFieldIndex === index ? 'primary' : 'gray'"
                                 :label="customField.label"
                                 variant="solid"
                                 class="cursor-pointer"
@@ -82,13 +82,7 @@
                     <h2 class="text-md font-medium">Custom</h2>
                     <ul v-if="customFields.length > 0" class="flex flex-wrap gap-2">
                         <li v-for="customField in customFields">
-                            <UBadge
-                                @click="customField.active = !customField.active"
-                                :color="customField.active ? 'primary' : 'gray'"
-                                :label="customField.label"
-                                variant="solid"
-                                class="cursor-pointer"
-                            />
+                            <UBadge :label="customField.label" color="gray" variant="solid"/>
                         </li>
                     </ul>
                     <span v-else class="text-sm font-medium text-gray-500 dark:text-gray-400">You have no custom fields</span>
@@ -149,13 +143,11 @@
             customFields.value[editedFieldIndex.value] = {
                 label: state.label,
                 type: state.type,
-                active: true,
             };
         } else {
             customFields.value.push({
                 label: state.label,
                 type: state.type,
-                active: true,
             });
         }
 
